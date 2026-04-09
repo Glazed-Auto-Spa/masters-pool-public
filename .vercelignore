@@ -1,0 +1,12 @@
+.git
+.venv
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+data/ledger
+data/state.json
+data/pool_config.json
+data/*.lock
+.cursor
+node_modules
