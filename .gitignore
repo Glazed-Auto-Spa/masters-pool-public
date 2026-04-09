@@ -8,6 +8,7 @@ masters_pool.egg-info/
 data/state.json
 data/pool_config.json
 data/ledger/*.jsonl
+data/ledger/*.lock
 data/poll.lock
 data/poll_loop.lock
 data/*.lock
