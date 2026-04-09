@@ -1,0 +1,20 @@
+{
+  "event_id": "401811941",
+  "poll_interval_seconds_live": 300,
+  "poll_interval_seconds_idle": 1800,
+  "timezone": "America/New_York",
+  "humor_mode": "chaos",
+  "poll_api_token": null,
+  "participants": [
+    {
+      "name": "Alice",
+      "predictedWinningToPar": -11,
+      "picks": [9478, 3470, 9780, 4587, 10592, 9037, 10364, 4348470]
+    },
+    {
+      "name": "Bob",
+      "predictedWinningToPar": -9,
+      "picks": [10046, 10140, 5539, 7081, 5409, 9525, 4375972, 11332]
+    }
+  ]
+}

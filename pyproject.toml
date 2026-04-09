@@ -1,0 +1,14 @@
+[project]
+name = "masters-pool"
+version = "0.1.0"
+description = "Masters pool scorer with ESPN live data and replay ledger"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "flask>=3.0.0",
+  "psycopg[binary]>=3.2.0",
+  "requests>=2.32.0",
+]
+
+[tool.setuptools]
+packages = ["app"]
