@@ -62,6 +62,8 @@ class ParticipantResult:
     eagle_bonus: int
     ace_bonus: int
     streak_bonus: int
+    daily_winner_bonus: int
+    daily_winner_days: list[int]
     main_event_payout: int
     net_payout: float
     tiebreak_prediction: int
@@ -132,6 +134,8 @@ def score_participants(
             eagle_bonus=eagle_total,
             ace_bonus=ace_total,
             streak_bonus=streak_total,
+            daily_winner_bonus=0,
+            daily_winner_days=[],
             main_event_payout=0,
             net_payout=0.0,
             tiebreak_prediction=participant.predicted_winning_to_par,
@@ -156,11 +160,15 @@ def score_participants(
             }
         )
 
-    results.sort(key=lambda r: (r.event_score, r.tiebreak_diff if r.tiebreak_diff is not None else 9999))
+    _apply_daily_winner_bonuses(results)
+    results.sort(key=_result_rank_key)
     if results:
         results[0].main_event_payout = main_event_pot
 
-    side_totals = [result.eagle_bonus + result.ace_bonus + result.streak_bonus for result in results]
+    side_totals = [
+        result.eagle_bonus + result.ace_bonus + result.streak_bonus + result.daily_winner_bonus
+        for result in results
+    ]
     side_nets = _compute_side_nets(side_totals)
     for idx, result in enumerate(results):
         side_net = side_nets[idx] if idx < len(side_nets) else 0.0
@@ -176,6 +184,8 @@ def score_participants(
                 "eagleBonusDollars": result.eagle_bonus,
                 "aceBonusDollars": result.ace_bonus,
                 "birdieStreakBonusDollars": result.streak_bonus,
+                "dailyWinnerBonusDollars": result.daily_winner_bonus,
+                "dailyWinnerDays": result.daily_winner_days,
                 "mainEventPayoutDollars": result.main_event_payout,
                 "netPayoutDollars": result.net_payout,
                 "predictedWinningToPar": result.tiebreak_prediction,
@@ -203,6 +213,14 @@ def score_participants(
         "streaks": sorted(
             (
                 {"name": row["name"], "amount": row["birdieStreakBonusDollars"]}
+                for row in leaderboard
+            ),
+            key=lambda x: x["amount"],
+            reverse=True,
+        ),
+        "dailyWinners": sorted(
+            (
+                {"name": row["name"], "amount": row.get("dailyWinnerBonusDollars", 0)}
                 for row in leaderboard
             ),
             key=lambda x: x["amount"],
@@ -338,4 +356,24 @@ def _compute_side_nets(side_totals: list[int]) -> list[float]:
         float((participant_count * total - side_total_sum) / denominator)
         for total in side_totals
     ]
+
+
+def _result_rank_key(result: ParticipantResult) -> tuple[int, int, str]:
+    return (
+        result.event_score,
+        result.tiebreak_diff if result.tiebreak_diff is not None else 9999,
+        result.name,
+    )
+
+
+def _apply_daily_winner_bonuses(results: list[ParticipantResult]) -> None:
+    if not results:
+        return
+    for day in range(1, 5):
+        low_score = min(result.daily_scores.get(day, 0) for result in results)
+        contenders = [result for result in results if result.daily_scores.get(day, 0) == low_score]
+        # Exactly one daily winner: deterministic tie-break by existing leaderboard key.
+        winner = sorted(contenders, key=_result_rank_key)[0]
+        winner.daily_winner_bonus += 10
+        winner.daily_winner_days.append(day)
 

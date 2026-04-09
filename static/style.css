@@ -825,6 +825,12 @@ tbody tr:hover {
   font-weight: 700;
 }
 
+.daily-winner-cell {
+  background: #cfeecf !important;
+  font-weight: 800;
+  color: #0b4e2f;
+}
+
 .legend {
   margin: 8px 0 2px;
   color: #4f654f;
@@ -1031,6 +1037,11 @@ tbody tr:hover {
 .skin-masters-v2 .move-pill.flat {
   background: #edf3ee;
   color: #536a5c;
+}
+
+.skin-masters-v2 .daily-winner-cell {
+  background: #c7eccb !important;
+  color: #0a4c2e;
 }
 
 .skin-masters-v2 .live-ribbon {

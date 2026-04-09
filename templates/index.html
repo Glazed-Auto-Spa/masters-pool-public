@@ -186,6 +186,7 @@
               <th>Eagles ($10)</th>
               <th>Aces ($20)</th>
               <th>Streaks ($10)</th>
+              <th>Daily Wins ($10)</th>
               <th>Side Bet Net</th>
               <th>Tiebreak Pick</th>
               <th>Tiebreak Diff</th>
@@ -209,15 +210,17 @@
                 {% endif %}
               </td>
               <td>{{ row.name }}</td>
-              <td>{{ to_par(row.dailyScores.get("1", row.dailyScores.get(1, 0))) }}</td>
-              <td>{{ to_par(row.dailyScores.get("2", row.dailyScores.get(2, 0))) }}</td>
-              <td>{{ to_par(row.dailyScores.get("3", row.dailyScores.get(3, 0))) }}</td>
-              <td>{{ to_par(row.dailyScores.get("4", row.dailyScores.get(4, 0))) }}</td>
+              {% set day_wins = row.get("dailyWinnerDays", []) %}
+              <td class="{{ 'daily-winner-cell' if 1 in day_wins else '' }}">{{ to_par(row.dailyScores.get("1", row.dailyScores.get(1, 0))) }}</td>
+              <td class="{{ 'daily-winner-cell' if 2 in day_wins else '' }}">{{ to_par(row.dailyScores.get("2", row.dailyScores.get(2, 0))) }}</td>
+              <td class="{{ 'daily-winner-cell' if 3 in day_wins else '' }}">{{ to_par(row.dailyScores.get("3", row.dailyScores.get(3, 0))) }}</td>
+              <td class="{{ 'daily-winner-cell' if 4 in day_wins else '' }}">{{ to_par(row.dailyScores.get("4", row.dailyScores.get(4, 0))) }}</td>
               <td><strong>{{ to_par(row.eventScore) }}</strong></td>
               <td><strong>${{ row.mainEventPayoutDollars if row.mainEventPayoutDollars is not none else ((config.participants|length) * 25 if row.rank == 1 else 0) }}</strong></td>
               <td>${{ row.eagleBonusDollars }}</td>
               <td>${{ row.aceBonusDollars }}</td>
               <td>${{ row.birdieStreakBonusDollars }}</td>
+              <td>${{ row.get("dailyWinnerBonusDollars", 0) }}</td>
               <td><strong>${{ '%.2f'|format(row.netPayoutDollars or 0) }}</strong></td>
               <td>{{ to_par(row.predictedWinningToPar) }}</td>
               <td>{{ row.tiebreakDiff if row.tiebreakDiff is not none else "-" }}</td>
@@ -250,6 +253,14 @@
             <h3>Birdie Streaks ($10)</h3>
             <ol id="side-streaks">
               {% for row in state.get("sideGameLeaders", {}).get("streaks", [])[:3] %}
+              <li>{{ row.name }} - ${{ row.amount }}</li>
+              {% endfor %}
+            </ol>
+          </article>
+          <article class="sidegame-card">
+            <h3>Daily Winners ($10/day)</h3>
+            <ol id="side-daily-winners">
+              {% for row in state.get("sideGameLeaders", {}).get("dailyWinners", [])[:3] %}
               <li>{{ row.name }} - ${{ row.amount }}</li>
               {% endfor %}
             </ol>
@@ -360,6 +371,7 @@
                 Birdie streaks: starts at 3 straight birdie-or-better holes for +$10, then +$10 for each additional consecutive
                 birdie-or-better hole.
               </li>
+              <li>Daily winner: +$10 each day (Thu/Fri/Sat/Sun) to the single lowest team score that day.</li>
               <li>Streak qualifying holes: birdie, eagle, ace. Any other result ends the streak.</li>
             </ul>
           </article>
@@ -375,7 +387,7 @@
         </div>
         <p class="rules-footnote">
           Main event pot is buy-in driven ($25 x participant count) and paid winner-take-all.
-          Side bets (Eagles/Aces/Streaks) are settled across all participants.
+          Side bets (Eagles/Aces/Streaks/Daily Winners) are settled across all participants.
         </p>
       </section>
     </main>
@@ -455,20 +467,23 @@
           const tr = document.createElement("tr");
           const moved = Boolean(row.movedThisCycle);
           const prev = row.previousRank ?? prevRanks[row.name];
+          const dayWins = new Set((row.dailyWinnerDays || []).map((v) => Number(v)));
+          const dayClass = (day) => (dayWins.has(day) ? "daily-winner-cell" : "");
           tr.className = moved ? (row.rank < prev ? "rank-up-row" : "rank-down-row") : "";
           tr.innerHTML = `
             <td>${row.rank}</td>
             <td>${movementCell(row)}</td>
             <td>${row.name}</td>
-            <td>${formatToPar(getDailyScore(row.dailyScores || {}, 1))}</td>
-            <td>${formatToPar(getDailyScore(row.dailyScores || {}, 2))}</td>
-            <td>${formatToPar(getDailyScore(row.dailyScores || {}, 3))}</td>
-            <td>${formatToPar(getDailyScore(row.dailyScores || {}, 4))}</td>
+            <td class="${dayClass(1)}">${formatToPar(getDailyScore(row.dailyScores || {}, 1))}</td>
+            <td class="${dayClass(2)}">${formatToPar(getDailyScore(row.dailyScores || {}, 2))}</td>
+            <td class="${dayClass(3)}">${formatToPar(getDailyScore(row.dailyScores || {}, 3))}</td>
+            <td class="${dayClass(4)}">${formatToPar(getDailyScore(row.dailyScores || {}, 4))}</td>
             <td><strong>${formatToPar(row.eventScore)}</strong></td>
             <td><strong>${mainEventPayoutForRow(row, rows) === null ? "--" : `$${mainEventPayoutForRow(row, rows)}`}</strong></td>
             <td>$${row.eagleBonusDollars}</td>
             <td>$${row.aceBonusDollars}</td>
             <td>$${row.birdieStreakBonusDollars}</td>
+            <td>$${row.dailyWinnerBonusDollars ?? 0}</td>
             <td><strong>${row.netPayoutDollars === null || row.netPayoutDollars === undefined ? "--" : `$${formatCurrency(row.netPayoutDollars)}`}</strong></td>
             <td>${formatToPar(row.predictedWinningToPar)}</td>
             <td>${row.tiebreakDiff ?? "-"}</td>
@@ -805,6 +820,7 @@
         mount("side-eagles", sideGames.eagles || []);
         mount("side-aces", sideGames.aces || []);
         mount("side-streaks", sideGames.streaks || []);
+        mount("side-daily-winners", sideGames.dailyWinners || []);
       }
 
       async function refreshState() {

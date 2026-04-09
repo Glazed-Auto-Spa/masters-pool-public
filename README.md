@@ -23,6 +23,9 @@ Standalone Masters pool scorer with:
   - starts at 3 consecutive qualifying holes
   - $10 at 3rd, +$10 each additional consecutive hole
   - resets on any non-qualifying hole
+- daily winner bonus:
+  - each day (Thu/Fri/Sat/Sun), the single lowest team score gets +$10
+  - deterministic tie break uses current leaderboard ordering rules
 - tiebreaker = closest prediction to winner's final score to par
 
 ## Quick start
