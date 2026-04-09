@@ -671,11 +671,20 @@
           ];
           const styleClassForType = (type) => {
             const t = (type || "").toUpperCase();
-            if (t === "ACE" || t === "EAGLE") return "hole-mark eagle";
+            if (t === "ACE" || t === "HOLE_IN_ONE") return "hole-mark ace";
+            if (t === "DOUBLE_EAGLE" || t === "ALBATROSS") return "hole-mark double-eagle";
+            if (t === "EAGLE") return "hole-mark eagle";
             if (t === "BIRDIE") return "hole-mark birdie";
             if (t === "BOGEY") return "hole-mark bogey";
             if (t === "DOUBLE_BOGEY" || t === "DOUBLEBOGEY") return "hole-mark double-bogey";
-            if (t === "TRIPLE_BOGEY" || t === "TRIPLEBOGEY" || t.includes("WORSE")) return "hole-mark double-bogey";
+            if (t === "TRIPLE_BOGEY" || t === "TRIPLEBOGEY" || t === "SNOWMAN") return "hole-mark triple-bogey";
+            if (
+              t === "QUADRUPLE_BOGEY" ||
+              t === "QUADRUPLEBOGEY" ||
+              t === "QUAD" ||
+              t === "OTHER" ||
+              t.includes("WORSE")
+            ) return "hole-mark quad-plus";
             return "hole-mark";
           };
           const roundFor = (pick, day) =>

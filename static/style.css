@@ -575,6 +575,21 @@ tbody tr:hover {
   font-weight: 700;
 }
 
+.hole-mark.double-eagle {
+  border: 2px double #0d3b26;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px #0d3b26;
+  font-weight: 800;
+}
+
+.hole-mark.ace {
+  border: 2px double #0d3b26;
+  border-radius: 50%;
+  font-weight: 800;
+  background: radial-gradient(circle at 35% 30%, #fff8d2 0%, #f2cf62 70%);
+  color: #0a2f1f;
+}
+
 .hole-mark.bogey {
   border: 2px solid #7d1a12;
   border-radius: 2px;
@@ -584,6 +599,29 @@ tbody tr:hover {
   border: 3px double #7d1a12;
   border-radius: 2px;
   font-weight: 700;
+}
+
+.hole-mark.triple-bogey {
+  border: 2px solid #9d2a20;
+  border-radius: 2px;
+  background: #f6d7d4;
+  color: #6f1a13;
+  font-weight: 700;
+}
+
+.hole-mark.quad-plus {
+  border: 2px solid #8b1d16;
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      #f7d6d2 0,
+      #f7d6d2 4px,
+      #efc1bc 4px,
+      #efc1bc 8px
+    );
+  color: #65130f;
+  font-weight: 800;
 }
 
 .scorecard-row td {
