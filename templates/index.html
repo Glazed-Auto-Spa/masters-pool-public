@@ -175,6 +175,7 @@
           <thead>
             <tr>
               <th>Rank</th>
+              <th>Holes Left (Live)</th>
               <th>Move</th>
               <th>Participant</th>
               <th>Thu</th>
@@ -196,6 +197,7 @@
             {% for row in state.get("leaderboard", []) %}
             <tr>
               <td>{{ row.rank }}</td>
+              <td><strong>{{ row.get("holesRemaining", 0) }}</strong></td>
               <td>
                 {% set move_dir = row.get("moveDirection", "flat") %}
                 {% set move_delta = row.get("moveDelta", 0) %}
@@ -472,6 +474,7 @@
           tr.className = moved ? (row.rank < prev ? "rank-up-row" : "rank-down-row") : "";
           tr.innerHTML = `
             <td>${row.rank}</td>
+            <td><strong>${Number.isFinite(Number(row.holesRemaining)) ? Number(row.holesRemaining) : 0}</strong></td>
             <td>${movementCell(row)}</td>
             <td>${row.name}</td>
             <td class="${dayClass(1)}">${formatToPar(getDailyScore(row.dailyScores || {}, 1))}</td>

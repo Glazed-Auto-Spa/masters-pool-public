@@ -64,6 +64,8 @@ class ParticipantResult:
     streak_bonus: int
     daily_winner_bonus: int
     daily_winner_days: list[int]
+    holes_remaining: int
+    holes_remaining_by_day: dict[int, int]
     main_event_payout: int
     net_payout: float
     tiebreak_prediction: int
@@ -83,6 +85,7 @@ def score_participants(
     results: list[ParticipantResult] = []
     participant_details: list[dict[str, Any]] = []
     main_event_pot = len(config.participants) * MAIN_EVENT_BUY_IN
+    active_round = _active_live_round(snapshots)
     for participant in config.participants:
         daily_scores: dict[int, int] = {}
         pick_scores_by_day: dict[int, dict[int, int]] = {}
@@ -127,6 +130,17 @@ def score_participants(
             streak_total += _streak_bonus(player)
 
         event_score = sum(daily_scores.values())
+        holes_remaining_by_day = {
+            day: sum(
+                _holes_remaining_for_player_in_round(snapshots.get(player_id), day)
+                for player_id in participant.picks
+            )
+            for day in range(1, 5)
+        }
+        holes_remaining = sum(
+            _holes_remaining_for_player_in_round(snapshots.get(player_id), active_round)
+            for player_id in participant.picks
+        )
         result = ParticipantResult(
             name=participant.name,
             daily_scores=daily_scores,
@@ -136,6 +150,8 @@ def score_participants(
             streak_bonus=streak_total,
             daily_winner_bonus=0,
             daily_winner_days=[],
+            holes_remaining=holes_remaining,
+            holes_remaining_by_day=holes_remaining_by_day,
             main_event_payout=0,
             net_payout=0.0,
             tiebreak_prediction=participant.predicted_winning_to_par,
@@ -160,7 +176,8 @@ def score_participants(
             }
         )
 
-    _apply_daily_winner_bonuses(results)
+    active_days = _active_days_for_daily_winner(snapshots)
+    _apply_daily_winner_bonuses(results, active_days=active_days)
     results.sort(key=_result_rank_key)
     if results:
         results[0].main_event_payout = main_event_pot
@@ -180,6 +197,8 @@ def score_participants(
                 "rank": idx,
                 "name": result.name,
                 "eventScore": result.event_score,
+                "holesRemaining": result.holes_remaining,
+                "holesRemainingByDay": result.holes_remaining_by_day,
                 "dailyScores": result.daily_scores,
                 "eagleBonusDollars": result.eagle_bonus,
                 "aceBonusDollars": result.ace_bonus,
@@ -366,14 +385,52 @@ def _result_rank_key(result: ParticipantResult) -> tuple[int, int, str]:
     )
 
 
-def _apply_daily_winner_bonuses(results: list[ParticipantResult]) -> None:
+def _apply_daily_winner_bonuses(results: list[ParticipantResult], active_days: set[int]) -> None:
     if not results:
         return
-    for day in range(1, 5):
+    for day in sorted(active_days):
         low_score = min(result.daily_scores.get(day, 0) for result in results)
         contenders = [result for result in results if result.daily_scores.get(day, 0) == low_score]
         # Exactly one daily winner: deterministic tie-break by existing leaderboard key.
         winner = sorted(contenders, key=_result_rank_key)[0]
         winner.daily_winner_bonus += 10
         winner.daily_winner_days.append(day)
+
+
+def _active_days_for_daily_winner(snapshots: dict[int, PlayerSnapshot]) -> set[int]:
+    max_started_round = 0
+    for snapshot in snapshots.values():
+        for round_number, round_data in snapshot.rounds.items():
+            if round_number < 1 or round_number > 4:
+                continue
+            # A round is considered started if ESPN returns hole-level scoring for it.
+            if round_data.holes:
+                max_started_round = max(max_started_round, round_number)
+    if max_started_round <= 0:
+        return set()
+    return set(range(1, max_started_round + 1))
+
+
+def _active_live_round(snapshots: dict[int, PlayerSnapshot]) -> int:
+    max_started_round = 0
+    for snapshot in snapshots.values():
+        for round_number, round_data in snapshot.rounds.items():
+            if round_number < 1 or round_number > 4:
+                continue
+            if round_data.holes:
+                max_started_round = max(max_started_round, round_number)
+    # If no hole-level data is present yet, default to round 1.
+    return max_started_round if max_started_round > 0 else 1
+
+
+def _holes_remaining_for_player_in_round(player: PlayerSnapshot | None, round_number: int) -> int:
+    if player is None:
+        return 18
+    if is_penalty_status(player.status):
+        return 0
+    round_data = player.rounds.get(round_number)
+    if round_data is None:
+        return 18
+    played_holes = len({hole.hole_number for hole in round_data.holes if hole.strokes > 0 and 1 <= hole.hole_number <= 18})
+    return max(0, 18 - played_holes)
 

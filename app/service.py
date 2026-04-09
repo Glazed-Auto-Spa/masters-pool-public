@@ -71,13 +71,13 @@ class PoolService:
             historical_feed = previous_state.get("eventFeed", []) if isinstance(previous_state, dict) else []
             if isinstance(historical_feed, list):
                 historical_feed = [
-                    entry
+                    _normalize_event_entry(entry)
                     for entry in historical_feed
                     if isinstance(entry, dict) and entry.get("type") == "movement" and entry.get("causal") is True
                 ]
             else:
                 historical_feed = []
-            state["eventFeed"] = (cycle_feed + historical_feed)[:300]
+            state["eventFeed"] = ([_normalize_event_entry(entry) for entry in cycle_feed] + historical_feed)[:300]
             self.store.write_state(state)
             self.store.append_ledger("state", state)
             return state
@@ -161,6 +161,7 @@ def _build_player_pulse(snapshots: dict[int, Any]) -> dict[str, dict[str, Any]]:
         latest_hole = 0
         latest_score_type = ""
         latest_strokes = 0
+        latest_par = 0
         for round_number, round_data in snapshot.rounds.items():
             for hole in round_data.holes:
                 if hole.strokes <= 0:
@@ -170,6 +171,7 @@ def _build_player_pulse(snapshots: dict[int, Any]) -> dict[str, dict[str, Any]]:
                     latest_hole = hole.hole_number
                     latest_score_type = hole.score_type
                     latest_strokes = hole.strokes
+                    latest_par = hole.par
         pulse[str(player_id)] = {
             "playerId": player_id,
             "playerName": snapshot.player_name,
@@ -177,6 +179,7 @@ def _build_player_pulse(snapshots: dict[int, Any]) -> dict[str, dict[str, Any]]:
             "hole": latest_hole if latest_hole > 0 else None,
             "scoreType": latest_score_type,
             "strokes": latest_strokes if latest_strokes > 0 else None,
+            "par": latest_par if latest_par > 0 else None,
             "totalToPar": snapshot.total_to_par,
         }
     return pulse
@@ -199,9 +202,13 @@ def _rank_move_reason(
         return ""
 
     picks = participant.get("picks", [])
-    favored_types = (
-        {"ACE", "EAGLE", "BIRDIE"} if direction == "up" else {"BOGEY", "DOUBLE_BOGEY", "TRIPLE_BOGEY", "WORSE"}
-    )
+    favored_types = {"ACE", "DOUBLE_EAGLE", "EAGLE", "BIRDIE"} if direction == "up" else {
+        "BOGEY",
+        "DOUBLE_BOGEY",
+        "SNOWMAN",
+        "QUAD",
+        "SHIT_TON",
+    }
     fallback_reason = ""
 
     for pick in picks:
@@ -217,7 +224,10 @@ def _rank_move_reason(
             continue
 
         score_type = str(after.get("scoreType", "") or "")
-        score_label = score_type.replace("_", " ").title() if score_type else "Score"
+        strokes = after.get("strokes")
+        par = after.get("par")
+        outcome_key = _score_outcome_key(score_type=score_type, strokes=strokes, par=par)
+        score_label = _score_outcome_label(outcome_key)
         hole = after.get("hole")
         rnd = after.get("round")
         player_name = after.get("playerName", pick.get("playerName", f"Player {player_id}"))
@@ -226,7 +236,7 @@ def _rank_move_reason(
         else:
             candidate = f" {player_name} posts a scoring update."
 
-        if score_type in favored_types:
+        if outcome_key in favored_types:
             return candidate
         if not fallback_reason:
             fallback_reason = candidate
@@ -242,6 +252,85 @@ def _movement_verb(direction: str, delta: int) -> str:
     if delta >= 3:
         return "plunges"
     return "slides"
+
+
+def _normalize_event_entry(entry: dict[str, Any]) -> dict[str, Any]:
+    message = str(entry.get("message", "") or "")
+    normalized_message = message.replace(" Other on hole ", " Shit Ton on hole ")
+    if normalized_message == message:
+        return entry
+    normalized = dict(entry)
+    normalized["message"] = normalized_message
+    return normalized
+
+
+def _score_outcome_key(score_type: str, strokes: Any, par: Any) -> str:
+    normalized = str(score_type or "").strip().upper()
+    if normalized in {"ACE", "HOLE_IN_ONE"}:
+        return "ACE"
+    if normalized in {"ALBATROSS", "DOUBLE_EAGLE"}:
+        return "DOUBLE_EAGLE"
+    if normalized == "EAGLE":
+        return "EAGLE"
+    if normalized == "BIRDIE":
+        return "BIRDIE"
+    if normalized == "PAR":
+        return "PAR"
+    if normalized in {"BOGEY", "BOGEY+"}:
+        return "BOGEY"
+    if normalized in {"DOUBLE_BOGEY", "DOUBLEBOGEY"}:
+        return "DOUBLE_BOGEY"
+
+    strokes_int = int(strokes) if isinstance(strokes, int) else None
+    par_int = int(par) if isinstance(par, int) else None
+    if strokes_int == 8:
+        return "SNOWMAN"
+    if strokes_int is not None and par_int is not None:
+        delta = strokes_int - par_int
+        if delta == -3:
+            return "DOUBLE_EAGLE"
+        if delta == -2:
+            return "EAGLE"
+        if delta == -1:
+            return "BIRDIE"
+        if delta == 0:
+            return "PAR"
+        if delta == 1:
+            return "BOGEY"
+        if delta == 2:
+            return "DOUBLE_BOGEY"
+        if delta == 3:
+            return "SNOWMAN" if strokes_int == 8 else "TRIPLE_BOGEY"
+        if delta == 4:
+            return "QUAD"
+        if delta > 4:
+            return "SHIT_TON"
+
+    if normalized in {"TRIPLE_BOGEY", "TRIPLEBOGEY"}:
+        return "TRIPLE_BOGEY"
+    if normalized in {"QUADRUPLE_BOGEY", "QUADRUPLEBOGEY"}:
+        return "QUAD"
+    if normalized in {"WORSE", "OTHER"}:
+        return "SHIT_TON"
+    return "SCORE"
+
+
+def _score_outcome_label(outcome_key: str) -> str:
+    labels = {
+        "ACE": "Ace",
+        "DOUBLE_EAGLE": "Double Eagle",
+        "EAGLE": "Eagle",
+        "BIRDIE": "Birdie",
+        "PAR": "Par",
+        "BOGEY": "Bogey",
+        "DOUBLE_BOGEY": "Double Bogey",
+        "TRIPLE_BOGEY": "Triple Bogey",
+        "SNOWMAN": "Snowman",
+        "QUAD": "Quad",
+        "SHIT_TON": "Shit Ton",
+        "SCORE": "Score",
+    }
+    return labels.get(outcome_key, "Score")
 
 
 def _annotate_rank_movement(leaderboard: list[dict[str, Any]], previous_leaderboard: list[dict[str, Any]]) -> None:
