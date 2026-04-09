@@ -576,6 +576,7 @@
           card.className = "participant-card";
           const totals = participant.dailyTotals || {};
           const picks = participant.picks || [];
+          const activeDay = inferActiveDayFromPicks(picks);
           const days = [
             { key: 1, label: "Thu" },
             { key: 2, label: "Fri" },
@@ -629,7 +630,7 @@
           }).join("");
 
           const dayTabs = days.map((day) => {
-            const active = day.key === 1 ? "active" : "";
+            const active = day.key === activeDay ? "active" : "";
             return `<button type="button" class="day-tab ${active}" data-day="${day.key}">${day.label}</button>`;
           }).join("");
 
@@ -654,7 +655,7 @@
                 </tr>
               `;
             }).join("");
-            const activePane = day.key === 1 ? "active" : "";
+            const activePane = day.key === activeDay ? "active" : "";
             return `
               <div class="scorecard-day-block day-pane ${activePane}" data-day-pane="${day.key}">
                 <h4>${day.label} Scorecards</h4>
@@ -725,6 +726,24 @@
           root.appendChild(card);
           wireDayTabs(card);
         }
+      }
+
+      function inferActiveDayFromPicks(picks) {
+        let activeDay = 1;
+        for (let day = 1; day <= 4; day += 1) {
+          const hasLiveHoleData = (picks || []).some((pick) => {
+            const round =
+              (pick.roundScorecards || {})[String(day)] ||
+              (pick.roundScorecards || {})[day] ||
+              { holes: [] };
+            const holes = Array.isArray(round.holes) ? round.holes : [];
+            return holes.some((value) => Number(value) > 0);
+          });
+          if (hasLiveHoleData) {
+            activeDay = day;
+          }
+        }
+        return activeDay;
       }
 
       function wireDayTabs(card) {
