@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+import os
 from pathlib import Path
 from typing import Any
 
 EXPECTED_PICKS_PER_PARTICIPANT = 8
+CONFIG_JSON_ENV = "MASTERS_POOL_CONFIG_JSON"
 
 
 @dataclass(slots=True)
@@ -28,6 +30,22 @@ class PoolConfig:
 
 def load_config(path: Path) -> PoolConfig:
     raw: dict[str, Any] = json.loads(path.read_text())
+    return _load_config_from_raw(raw)
+
+
+def load_runtime_config(base_dir: Path) -> PoolConfig:
+    inline_config = os.getenv(CONFIG_JSON_ENV, "").strip()
+    if inline_config:
+        raw: dict[str, Any] = json.loads(inline_config)
+        return _load_config_from_raw(raw)
+
+    config_path = base_dir / "data" / "pool_config.json"
+    if not config_path.exists():
+        config_path = base_dir / "data" / "pool_config.example.json"
+    return load_config(config_path)
+
+
+def _load_config_from_raw(raw: dict[str, Any]) -> PoolConfig:
     participants = [
         ParticipantConfig(
             name=item["name"],

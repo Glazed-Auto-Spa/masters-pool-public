@@ -67,6 +67,7 @@ This app supports two storage backends:
 
 - `MASTERS_POOL_DATABASE_URL` -> Neon connection string (`sslmode=require`)
 - `CRON_SECRET` (preferred on Vercel) or `MASTERS_POOL_CRON_SECRET` -> bearer secret for cron polling auth
+- `MASTERS_POOL_CONFIG_JSON` -> optional full pool config JSON (recommended for Vercel so production does not fall back to example participants)
 
 ### Vercel behavior
 

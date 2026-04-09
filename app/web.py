@@ -5,7 +5,7 @@ from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
 
-from app.config import load_config
+from app.config import load_runtime_config
 from app.service import PoolService
 
 
@@ -15,10 +15,7 @@ def create_app(base_dir: Path) -> Flask:
         template_folder=str(base_dir / "templates"),
         static_folder=str(base_dir / "static"),
     )
-    config_path = base_dir / "data" / "pool_config.json"
-    if not config_path.exists():
-        config_path = base_dir / "data" / "pool_config.example.json"
-    config = load_config(config_path)
+    config = load_runtime_config(base_dir)
     service = PoolService(base_dir=base_dir, config=config)
     cron_secret = os.getenv("MASTERS_POOL_CRON_SECRET", "").strip() or os.getenv("CRON_SECRET", "").strip()
 

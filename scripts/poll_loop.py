@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.config import load_config
+from app.config import load_runtime_config
 from app.service import PoolService
 
 
@@ -18,11 +18,7 @@ def _is_active_play_window(now_utc: datetime) -> bool:
 
 def main() -> None:
     base_dir = Path(__file__).resolve().parents[1]
-    config_path = base_dir / "data" / "pool_config.json"
-    if not config_path.exists():
-        config_path = base_dir / "data" / "pool_config.example.json"
-
-    config = load_config(config_path)
+    config = load_runtime_config(base_dir)
     service = PoolService(base_dir=base_dir, config=config)
 
     try:
