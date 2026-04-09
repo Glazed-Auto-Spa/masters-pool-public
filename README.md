@@ -66,13 +66,13 @@ This app supports two storage backends:
 ### Required env vars
 
 - `MASTERS_POOL_DATABASE_URL` -> Neon connection string (`sslmode=require`)
-- `MASTERS_POOL_CRON_SECRET` -> long random secret used to authorize cron polling
+- `CRON_SECRET` (preferred on Vercel) or `MASTERS_POOL_CRON_SECRET` -> bearer secret for cron polling auth
 
 ### Vercel behavior
 
 - Vercel serves Flask app from `api/index.py`
 - `vercel.json` config runs cron every 5 minutes: `GET /api/cron/poll`
-- cron endpoint requires `Authorization: Bearer <MASTERS_POOL_CRON_SECRET>`
+- cron endpoint requires `Authorization: Bearer <CRON_SECRET>` (or app-specific secret env)
 
 ### Important isolation note
 

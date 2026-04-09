@@ -12,3 +12,4 @@ data/ledger/*.lock
 data/poll.lock
 data/poll_loop.lock
 data/*.lock
+.vercel

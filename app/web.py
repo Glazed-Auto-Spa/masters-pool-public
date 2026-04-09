@@ -20,7 +20,7 @@ def create_app(base_dir: Path) -> Flask:
         config_path = base_dir / "data" / "pool_config.example.json"
     config = load_config(config_path)
     service = PoolService(base_dir=base_dir, config=config)
-    cron_secret = os.getenv("MASTERS_POOL_CRON_SECRET", "").strip()
+    cron_secret = os.getenv("MASTERS_POOL_CRON_SECRET", "").strip() or os.getenv("CRON_SECRET", "").strip()
 
     @app.get("/")
     def index() -> str:
