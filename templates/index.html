@@ -121,54 +121,6 @@
         <div id="errors" class="errors"></div>
       </section>
 
-      <section class="official-card-section">
-        <h2>Official Course Card (Par)</h2>
-        <div class="scorecard-wrap">
-          <table id="official-par-card" class="scorecard-table">
-            <thead>
-              <tr>
-                <th>Hole</th>
-                {% for hole in state.get("courseCard", {}).get("holes", range(1, 19)) %}
-                <th>{{ hole }}</th>
-                {% endfor %}
-                <th>OUT</th>
-                <th>IN</th>
-                <th>TOT</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Par</td>
-                {% for par in state.get("courseCard", {}).get("pars", [4,5,4,3,4,3,4,5,4,4,4,3,5,4,5,3,4,4]) %}
-                <td>{{ par }}</td>
-                {% endfor %}
-                <td>{{ state.get("courseCard", {}).get("outPar", 36) }}</td>
-                <td>{{ state.get("courseCard", {}).get("inPar", 36) }}</td>
-                <td>{{ state.get("courseCard", {}).get("totalPar", 72) }}</td>
-              </tr>
-              <tr>
-                <td>Yards</td>
-                {% for y in state.get("courseCard", {}).get("yards", [445,585,350,177,495,192,450,570,460,495,520,150,545,440,550,165,450,465]) %}
-                <td>{{ y }}</td>
-                {% endfor %}
-                <td>{{ state.get("courseCard", {}).get("outYards", 3724) }}</td>
-                <td>{{ state.get("courseCard", {}).get("inYards", 3780) }}</td>
-                <td>{{ state.get("courseCard", {}).get("totalYards", 7504) }}</td>
-              </tr>
-              <tr>
-                <td>Hcp</td>
-                {% for h in state.get("courseCard", {}).get("handicap", [9,1,13,15,5,17,11,3,7,6,8,16,4,12,2,18,14,10]) %}
-                <td>{{ h }}</td>
-                {% endfor %}
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
       <section>
         <h2>Live Standings</h2>
         <table id="standings">
@@ -602,60 +554,27 @@
         }
         renderEventFeed(feed);
         window.__courseCard = data.courseCard || {};
-        renderOfficialCard(data.courseCard || {});
         populateFocusOptions(data.participantDetails || []);
         renderParticipantDetails(data.participantDetails || []);
         renderSideGames(data.sideGameLeaders || {});
         prevRanks = Object.fromEntries((data.leaderboard || []).map((row) => [row.name, row.rank]));
       }
 
-      function renderOfficialCard(courseCard) {
-        const table = document.getElementById("official-par-card");
-        if (!table) return;
-        const holes = courseCard.holes || Array.from({ length: 18 }, (_, i) => i + 1);
-        const pars = courseCard.pars || [4, 5, 4, 3, 4, 3, 4, 5, 4, 4, 4, 3, 5, 4, 5, 3, 4, 4];
-        const yards = courseCard.yards || [445, 585, 350, 177, 495, 192, 450, 570, 460, 495, 520, 150, 545, 440, 550, 165, 450, 465];
-        const handicap = courseCard.handicap || [9, 1, 13, 15, 5, 17, 11, 3, 7, 6, 8, 16, 4, 12, 2, 18, 14, 10];
-        const outPar = courseCard.outPar ?? 36;
-        const inPar = courseCard.inPar ?? 36;
-        const totalPar = courseCard.totalPar ?? 72;
-        const outYards = courseCard.outYards ?? 3724;
-        const inYards = courseCard.inYards ?? 3780;
-        const totalYards = courseCard.totalYards ?? 7504;
-
-        table.innerHTML = `
-          <thead>
-            <tr>
-              <th>Hole</th>
-              ${holes.map((h) => `<th>${h}</th>`).join("")}
-              <th>OUT</th><th>IN</th><th>TOT</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Par</td>
-              ${pars.map((p) => `<td>${p}</td>`).join("")}
-              <td>${outPar}</td><td>${inPar}</td><td>${totalPar}</td>
-            </tr>
-            <tr>
-              <td>Yards</td>
-              ${yards.map((y) => `<td>${y}</td>`).join("")}
-              <td>${outYards}</td><td>${inYards}</td><td>${totalYards}</td>
-            </tr>
-            <tr>
-              <td>Hcp</td>
-              ${handicap.map((h) => `<td>${h}</td>`).join("")}
-              <td>-</td><td>-</td><td>-</td>
-            </tr>
-          </tbody>
-        `;
-      }
-
       function renderParticipantDetails(participants) {
         const root = document.getElementById("participant-details");
         root.innerHTML = "";
         const focusName = (document.getElementById("participant-focus") || {}).value || "";
-        const defaultCourse = { holes: Array.from({ length: 18 }, (_, i) => i + 1), pars: [4,5,4,3,4,3,4,5,4,4,4,3,5,4,5,3,4,4], outPar: 36, inPar: 36, totalPar: 72 };
+        const defaultCourse = {
+          holes: Array.from({ length: 18 }, (_, i) => i + 1),
+          pars: [4,5,4,3,4,3,4,5,4,4,4,3,5,4,5,3,4,4],
+          yards: [445,585,350,177,495,192,450,570,460,495,520,150,545,440,550,165,450,465],
+          outPar: 36,
+          inPar: 36,
+          totalPar: 72,
+          outYards: 3724,
+          inYards: 3780,
+          totalYards: 7504,
+        };
         const courseCard = window.__courseCard || defaultCourse;
         for (const participant of participants) {
           if (focusName && participant.name !== focusName) continue;
@@ -759,6 +678,13 @@
                         <td>${courseCard.outPar || 36}</td>
                         <td>${courseCard.inPar || 36}</td>
                         <td>${courseCard.totalPar || 72}</td>
+                      </tr>
+                      <tr>
+                        <td>Yards</td>
+                        ${(courseCard.yards || []).map((y) => `<td>${y}</td>`).join("")}
+                        <td>${courseCard.outYards || 3724}</td>
+                        <td>${courseCard.inYards || 3780}</td>
+                        <td>${courseCard.totalYards || 7504}</td>
                       </tr>
                       ${playerRows}
                     </tbody>
