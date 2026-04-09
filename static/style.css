@@ -1102,3 +1102,1830 @@ tbody tr:hover {
   background: rgba(242, 201, 76, 0.1);
   color: #f8ecbc;
 }
+
+/* Masters-inspired modern skin (clean + editorial) */
+.skin-masters-v3 {
+  --v3-green-900: #083d2a;
+  --v3-green-800: #0f5132;
+  --v3-green-700: #176541;
+  --v3-gold: #caa85e;
+  --v3-bg: #f3f5f6;
+  --v3-surface: #ffffff;
+  --v3-border: #dbe1e5;
+  --v3-ink: #13212b;
+  --v3-muted: #5f6f7a;
+  background: linear-gradient(180deg, #f6f7f8 0%, #eef2f3 100%);
+  color: var(--v3-ink);
+}
+
+.skin-masters-v3 .masthead {
+  background: linear-gradient(90deg, var(--v3-green-900), var(--v3-green-800));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 2px 10px rgba(8, 34, 25, 0.18);
+  padding: 14px 26px;
+}
+
+.skin-masters-v3 .masthead h1 {
+  font-size: 1.32rem;
+  letter-spacing: 0.01em;
+}
+
+.skin-masters-v3 .masthead-nav {
+  gap: 8px;
+}
+
+.skin-masters-v3 .masthead-nav span {
+  background: transparent;
+  border-radius: 4px;
+  border: 0;
+  padding: 3px 2px;
+  color: rgba(226, 237, 231, 0.9);
+  font-size: 0.68rem;
+}
+
+.skin-masters-v3 .official-site-link {
+  border-radius: 4px;
+  border: 1px solid rgba(202, 168, 94, 0.55);
+  background: rgba(202, 168, 94, 0.12);
+  color: #f6e7c6;
+}
+
+.skin-masters-v3 .container {
+  max-width: 1440px;
+}
+
+.skin-masters-v3 .hero-copy,
+.skin-masters-v3 .hero-tile,
+.skin-masters-v3 .status-card,
+.skin-masters-v3 .event-feed,
+.skin-masters-v3 .participant-card,
+.skin-masters-v3 .rules-section,
+.skin-masters-v3 .sidegame-card {
+  background: var(--v3-surface);
+  border: 1px solid var(--v3-border);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(15, 31, 44, 0.06);
+}
+
+.skin-masters-v3 .hero-copy {
+  border-top: 3px solid var(--v3-green-700);
+  padding: 20px;
+}
+
+.skin-masters-v3 .hero-copy h2 {
+  color: #17323f;
+  font-size: 1.4rem;
+  text-shadow: none;
+}
+
+.skin-masters-v3 .hero-copy p {
+  color: #445764;
+  text-shadow: none;
+}
+
+.skin-masters-v3 .kicker {
+  color: #1f6a47;
+}
+
+.skin-masters-v3 .hero-tile {
+  border-top: 3px solid #1c6746;
+  color: #17323f;
+  background: #fff;
+}
+
+.skin-masters-v3 .hero-label {
+  color: #5b6c77;
+}
+
+.skin-masters-v3 .hero-subline {
+  color: #4f616c;
+}
+
+.skin-masters-v3 .live-ribbon {
+  background: #103f2c;
+  border: 1px solid rgba(202, 168, 94, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(9, 30, 22, 0.16);
+}
+
+.skin-masters-v3 .ticker-meta {
+  color: #f0dfb8;
+}
+
+.skin-masters-v3 h2 {
+  color: #17323f;
+  border-bottom: 1px solid #d8e0e4;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.skin-masters-v3 table {
+  background: #fff;
+  border: 1px solid var(--v3-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(16, 35, 46, 0.06);
+}
+
+.skin-masters-v3 thead th {
+  background: #124d35;
+  color: #f1f5f3;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+
+.skin-masters-v3 tbody td {
+  border-bottom: 1px solid #e8edf0;
+  font-size: 0.86rem;
+}
+
+.skin-masters-v3 tbody tr:nth-child(even) {
+  background: #f9fbfc;
+}
+
+.skin-masters-v3 tbody tr:hover {
+  background: #f1f6f8;
+}
+
+.skin-masters-v3 .participant-card,
+.skin-masters-v3 .rules-section,
+.skin-masters-v3 .sidegame-card {
+  border-top: 3px solid #1d6344;
+}
+
+.skin-masters-v3 .participant-totals span,
+.skin-masters-v3 .participant-totals strong {
+  border-radius: 4px;
+  background: #f5f8fa;
+  border: 1px solid #dde5ea;
+}
+
+.skin-masters-v3 .participant-totals strong {
+  background: #e9f4ee;
+}
+
+.skin-masters-v3 .move-pill {
+  border-radius: 4px;
+  min-width: 44px;
+}
+
+.skin-masters-v3 .move-pill.up {
+  background: #deefe2;
+  color: #14542f;
+}
+
+.skin-masters-v3 .move-pill.down {
+  background: #f6dfdd;
+  color: #7a1f1a;
+}
+
+.skin-masters-v3 .move-pill.flat {
+  background: #eef2f4;
+  color: #556670;
+}
+
+.skin-masters-v3 .daily-winner-cell {
+  background: #d8efdf !important;
+  color: #114f2f;
+}
+
+.skin-masters-v3 .brand-lockup {
+  gap: 10px;
+}
+
+.skin-masters-v3 .crest-image {
+  height: 30px;
+}
+
+.skin-masters-v3 .hero-stage {
+  margin-bottom: 8px;
+}
+
+.skin-masters-v3 .hero-strip {
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.skin-masters-v3 .hero-tile {
+  border-radius: 6px;
+  border-top-width: 2px;
+  padding: 10px 11px;
+}
+
+.skin-masters-v3 .event-feed {
+  border-radius: 6px;
+}
+
+.skin-masters-v3 .event-item {
+  border-radius: 4px;
+  background: #fff;
+  border: 1px solid #e3e9ed;
+}
+
+.skin-masters-v3 .status-card,
+.skin-masters-v3 .rules-section,
+.skin-masters-v3 .sidegame-card,
+.skin-masters-v3 .participant-card {
+  border-radius: 6px;
+}
+
+.skin-masters-v3 .participant-header,
+.skin-masters-v3 .participant-card-header {
+  align-items: center;
+}
+
+.skin-masters-v3 .participant-card-header h3 {
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.skin-masters-v3 .participant-totals {
+  gap: 4px;
+}
+
+.skin-masters-v3 .participant-totals span,
+.skin-masters-v3 .participant-totals strong {
+  font-size: 0.76rem;
+  padding: 2px 6px;
+}
+
+.skin-masters-v3 .sidegames-grid,
+.skin-masters-v3 .rules-grid {
+  gap: 8px;
+}
+
+.skin-masters-v3 .sidegame-card,
+.skin-masters-v3 .rules-card {
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.skin-masters-v3 .rules-card {
+  border-top: 2px solid #1d6344;
+}
+
+.skin-masters-v3 .rules-card li {
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.skin-masters-v3 .rules-footnote {
+  font-style: normal;
+  color: #5a6a74;
+}
+
+.skin-masters-v3 #standings,
+.skin-masters-v3 .pick-table,
+.skin-masters-v3 .scorecard-table {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.skin-masters-v3 #standings thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.skin-masters-v3 thead th {
+  padding: 9px 6px;
+}
+
+.skin-masters-v3 tbody td {
+  padding: 7px 6px;
+}
+
+.skin-masters-v3 .move-pill {
+  background: transparent !important;
+  border: 0;
+  min-width: 24px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.skin-masters-v3 .move-pill.up {
+  color: #16683a;
+}
+
+.skin-masters-v3 .move-pill.down {
+  color: #9a221b;
+}
+
+.skin-masters-v3 .move-pill.flat {
+  color: #7a8a95;
+}
+
+.skin-masters-v3 .scorecard-wrap {
+  border-radius: 0;
+  border-color: #dce3e7;
+}
+
+.skin-masters-v3 .scorecard-table thead th {
+  background: #154e37;
+}
+
+.skin-masters-v3 .day-tabs {
+  margin-top: 8px;
+}
+
+.skin-masters-v3 .day-tab {
+  border-radius: 3px;
+  font-size: 0.74rem;
+  padding: 3px 8px;
+}
+
+.skin-masters-v3 .day-tab.active {
+  background: #154e37;
+  border-color: #154e37;
+}
+
+/* Final hard override: eliminate bubble aesthetics */
+.skin-masters-v3 .hero-copy,
+.skin-masters-v3 .hero-tile,
+.skin-masters-v3 .live-ribbon,
+.skin-masters-v3 .status-card,
+.skin-masters-v3 .event-feed,
+.skin-masters-v3 .event-item,
+.skin-masters-v3 .participant-card,
+.skin-masters-v3 .rules-section,
+.skin-masters-v3 .rules-card,
+.skin-masters-v3 .sidegame-card,
+.skin-masters-v3 .feed-more-btn,
+.skin-masters-v3 .move-pill,
+.skin-masters-v3 .participant-totals span,
+.skin-masters-v3 .participant-totals strong,
+.skin-masters-v3 .day-tab,
+.skin-masters-v3 #participant-focus,
+.skin-masters-v3 .official-site-link,
+.skin-masters-v3 .masthead-nav span,
+.skin-masters-v3 .scorecard-wrap,
+.skin-masters-v3 table {
+  border-radius: 0 !important;
+}
+
+.skin-masters-v3 table,
+.skin-masters-v3 .scorecard-table,
+.skin-masters-v3 .pick-table,
+.skin-masters-v3 #standings {
+  box-shadow: none !important;
+}
+
+.skin-masters-v3 .hero-copy,
+.skin-masters-v3 .hero-tile,
+.skin-masters-v3 .status-card,
+.skin-masters-v3 .event-feed,
+.skin-masters-v3 .participant-card,
+.skin-masters-v3 .rules-section,
+.skin-masters-v3 .sidegame-card,
+.skin-masters-v3 .rules-card {
+  background: #ffffff !important;
+}
+
+.skin-masters-v3 .masthead-nav span {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.skin-masters-v3 .hero-copy {
+  padding: 14px 16px;
+}
+
+.skin-masters-v3 .hero-copy h2 {
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+}
+
+.skin-masters-v3 .hero-copy p {
+  font-size: 0.9rem;
+}
+
+/* Masters-inspired 2026 polish skin */
+.skin-masters-v4 {
+  --v4-bg-0: #eef3f4;
+  --v4-bg-1: #f8fbfb;
+  --v4-surface: #ffffff;
+  --v4-surface-2: #f6faf9;
+  --v4-border: #d7e0e3;
+  --v4-ink: #152631;
+  --v4-muted: #556a76;
+  --v4-green-900: #0b3f2a;
+  --v4-green-800: #12563a;
+  --v4-green-700: #1a6c48;
+  --v4-gold: #c6a45e;
+  --v4-shadow-sm: 0 4px 12px rgba(13, 38, 54, 0.08);
+  --v4-shadow-md: 0 10px 30px rgba(13, 38, 54, 0.12);
+  background:
+    radial-gradient(1200px 600px at 100% -20%, rgba(198, 164, 94, 0.16), transparent 55%),
+    radial-gradient(1000px 500px at -10% -20%, rgba(18, 86, 58, 0.14), transparent 58%),
+    linear-gradient(180deg, var(--v4-bg-1) 0%, var(--v4-bg-0) 100%);
+  color: var(--v4-ink);
+}
+
+.skin-masters-v4 .masthead {
+  background:
+    linear-gradient(90deg, var(--v4-green-900), var(--v4-green-800)),
+    radial-gradient(circle at 80% 20%, rgba(198, 164, 94, 0.2), transparent 40%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(8, 27, 20, 0.26);
+  padding: 12px 24px;
+  backdrop-filter: saturate(120%) blur(4px);
+}
+
+.skin-masters-v4 .masthead h1 {
+  font-size: clamp(1.05rem, 1.3vw, 1.3rem);
+  letter-spacing: 0.012em;
+}
+
+.skin-masters-v4 .masthead-nav {
+  gap: 10px;
+}
+
+.skin-masters-v4 .masthead-nav span {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(230, 241, 236, 0.95);
+  opacity: 0.9;
+}
+
+.skin-masters-v4 .official-site-link {
+  border: 1px solid rgba(198, 164, 94, 0.64);
+  background: linear-gradient(180deg, rgba(198, 164, 94, 0.24), rgba(198, 164, 94, 0.12));
+  color: #f8ecd0;
+  text-transform: uppercase;
+  font-size: 0.64rem;
+  letter-spacing: 0.09em;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.skin-masters-v4 .official-site-link:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+.skin-masters-v4 .container {
+  max-width: 1480px;
+}
+
+.skin-masters-v4 .hero-copy,
+.skin-masters-v4 .hero-tile,
+.skin-masters-v4 .status-card,
+.skin-masters-v4 .event-feed,
+.skin-masters-v4 .participant-card,
+.skin-masters-v4 .rules-section,
+.skin-masters-v4 .sidegame-card {
+  background: linear-gradient(180deg, var(--v4-surface) 0%, var(--v4-surface-2) 100%);
+  border: 1px solid var(--v4-border);
+  border-radius: 4px;
+  box-shadow: var(--v4-shadow-sm);
+}
+
+.skin-masters-v4 .hero-copy {
+  border-top: 3px solid var(--v4-green-700);
+  padding: 18px 18px 16px;
+}
+
+.skin-masters-v4 .kicker {
+  color: #235f44;
+  font-size: 0.68rem;
+  letter-spacing: 0.11em;
+}
+
+.skin-masters-v4 .hero-copy h2 {
+  margin: 0 0 8px;
+  font-size: clamp(1.15rem, 1.9vw, 1.55rem);
+  color: #1a3644;
+  text-shadow: none;
+}
+
+.skin-masters-v4 .hero-copy p {
+  color: #425866;
+  font-size: 0.92rem;
+  text-shadow: none;
+}
+
+.skin-masters-v4 .hero-strip {
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.skin-masters-v4 .hero-tile {
+  border-top: 3px solid #1e6948;
+  padding: 10px 12px;
+}
+
+.skin-masters-v4 .hero-label {
+  color: #60737e;
+}
+
+.skin-masters-v4 .hero-tile strong {
+  color: #1c3642;
+}
+
+.skin-masters-v4 .hero-subline {
+  color: #4f6470;
+}
+
+.skin-masters-v4 .live-ribbon {
+  border-radius: 4px;
+  background:
+    linear-gradient(90deg, #0d462f, #14583b),
+    radial-gradient(circle at 85% 10%, rgba(198, 164, 94, 0.2), transparent 45%);
+  border: 1px solid rgba(198, 164, 94, 0.4);
+  box-shadow: var(--v4-shadow-md);
+}
+
+.skin-masters-v4 .ticker {
+  font-size: 0.86rem;
+}
+
+.skin-masters-v4 .ticker-meta {
+  color: #f0dfb6;
+}
+
+.skin-masters-v4 h2 {
+  color: #1b3542;
+  border-bottom: 1px solid #d8e2e7;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.skin-masters-v4 .event-feed {
+  padding: 10px 12px;
+}
+
+.skin-masters-v4 .event-item {
+  background: #fff;
+  border: 1px solid #e1e9ed;
+  border-radius: 3px;
+}
+
+.skin-masters-v4 table,
+.skin-masters-v4 .scorecard-table,
+.skin-masters-v4 .pick-table,
+.skin-masters-v4 #standings {
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid #dbe4e8;
+  background: #fff;
+}
+
+.skin-masters-v4 thead th {
+  background: linear-gradient(180deg, #16563b, #124c34);
+  color: #f2f6f4;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 8px 6px;
+}
+
+.skin-masters-v4 tbody td {
+  border-bottom: 1px solid #e7edf0;
+  font-size: 0.84rem;
+  padding: 6px 6px;
+}
+
+.skin-masters-v4 tbody tr:nth-child(even) {
+  background: #fafcfc;
+}
+
+.skin-masters-v4 tbody tr:hover {
+  background: #f1f7f8;
+}
+
+.skin-masters-v4 #standings thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.skin-masters-v4 .status-card,
+.skin-masters-v4 .participant-card,
+.skin-masters-v4 .rules-section,
+.skin-masters-v4 .sidegame-card {
+  border-top: 2px solid #1d6646;
+  border-radius: 4px;
+}
+
+.skin-masters-v4 .participant-card-header h3 {
+  color: #1b3643;
+  font-size: 1rem;
+}
+
+.skin-masters-v4 .participant-totals span,
+.skin-masters-v4 .participant-totals strong {
+  border: 1px solid #dbe4e8;
+  border-radius: 2px;
+  background: #f7fafb;
+  color: #334b57;
+  font-size: 0.75rem;
+}
+
+.skin-masters-v4 .participant-totals strong {
+  background: #e9f5ee;
+  color: #20583d;
+}
+
+.skin-masters-v4 .move-pill {
+  border-radius: 2px;
+  padding: 1px 4px;
+  min-width: 28px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.skin-masters-v4 .move-pill.up {
+  background: #dff1e4;
+  color: #145932;
+}
+
+.skin-masters-v4 .move-pill.down {
+  background: #f8e1df;
+  color: #8d221d;
+}
+
+.skin-masters-v4 .move-pill.flat {
+  background: #edf2f4;
+  color: #5b6e79;
+}
+
+.skin-masters-v4 .daily-winner-cell {
+  background: #d8efe0 !important;
+  color: #145333;
+}
+
+.skin-masters-v4 .rules-card {
+  border-top: 2px solid #1f6848;
+  border-radius: 3px;
+}
+
+.skin-masters-v4 .rules-card li {
+  font-size: 0.8rem;
+}
+
+.skin-masters-v4 .rules-footnote {
+  color: #5d707b;
+  font-style: normal;
+}
+
+.skin-masters-v4 .sidegame-card {
+  border-radius: 3px;
+}
+
+.skin-masters-v4 .scorecard-wrap {
+  border-color: #dbe4e8;
+  border-radius: 0;
+}
+
+.skin-masters-v4 .day-tab {
+  border-radius: 2px;
+  font-size: 0.73rem;
+  padding: 3px 8px;
+}
+
+.skin-masters-v4 .day-tab.active {
+  background: #155238;
+  border-color: #155238;
+}
+
+.skin-masters-v4 .feed-more-btn {
+  border-radius: 2px;
+  font-size: 0.75rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skin-masters-v4 .hero-tile,
+  .skin-masters-v4 .participant-card,
+  .skin-masters-v4 .sidegame-card,
+  .skin-masters-v4 .rules-card,
+  .skin-masters-v4 .event-item {
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  }
+
+  .skin-masters-v4 .hero-tile:hover,
+  .skin-masters-v4 .participant-card:hover,
+  .skin-masters-v4 .sidegame-card:hover,
+  .skin-masters-v4 .rules-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--v4-shadow-md);
+    border-color: #c8d5dc;
+  }
+}
+
+/* Masters-style editorial scoreboard skin */
+.skin-masters-v5 {
+  --v5-bg: #f4f6f7;
+  --v5-surface: #ffffff;
+  --v5-ink: #0f212b;
+  --v5-muted: #60717c;
+  --v5-line: #d8e0e4;
+  --v5-green-900: #083b27;
+  --v5-green-800: #0f5133;
+  --v5-green-700: #176342;
+  --v5-gold: #bea060;
+  background: linear-gradient(180deg, #f7f9fa 0%, var(--v5-bg) 100%);
+  color: var(--v5-ink);
+}
+
+.skin-masters-v5 .masthead {
+  background: linear-gradient(90deg, var(--v5-green-900), var(--v5-green-800));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 20px rgba(4, 21, 16, 0.28);
+  padding: 10px 22px;
+}
+
+.skin-masters-v5 .masthead h1 {
+  font-size: 1.14rem;
+  letter-spacing: 0.02em;
+}
+
+.skin-masters-v5 .crest-image {
+  height: 28px;
+}
+
+.skin-masters-v5 .masthead-nav {
+  gap: 10px;
+}
+
+.skin-masters-v5 .masthead-nav span {
+  background: transparent;
+  border: 0;
+  color: rgba(234, 244, 238, 0.9);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0;
+}
+
+.skin-masters-v5 .official-site-link {
+  border: 1px solid rgba(190, 160, 96, 0.6);
+  background: rgba(190, 160, 96, 0.13);
+  color: #f4e7cd;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.skin-masters-v5 .container {
+  max-width: 1520px;
+  margin-top: 16px;
+}
+
+.skin-masters-v5 .hero-stage {
+  margin-bottom: 8px;
+}
+
+.skin-masters-v5 .hero-copy {
+  background: var(--v5-surface);
+  border: 1px solid var(--v5-line);
+  border-top: 3px solid var(--v5-green-700);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 14px 14px 12px;
+}
+
+.skin-masters-v5 .kicker {
+  color: #2c6c4a;
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+}
+
+.skin-masters-v5 .hero-copy h2 {
+  color: #163745;
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+  text-shadow: none;
+}
+
+.skin-masters-v5 .hero-copy p {
+  color: #4a5f6c;
+  font-size: 0.88rem;
+  text-shadow: none;
+}
+
+.skin-masters-v5 .hero-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.skin-masters-v5 .hero-tile {
+  background: var(--v5-surface);
+  border: 1px solid var(--v5-line);
+  border-top: 2px solid #1f6948;
+  border-radius: 0;
+  box-shadow: none;
+  color: #1c3946;
+  padding: 8px 10px;
+}
+
+.skin-masters-v5 .hero-label {
+  color: #5d717d;
+  font-size: 0.64rem;
+}
+
+.skin-masters-v5 .hero-tile strong {
+  font-size: 1.02rem;
+}
+
+.skin-masters-v5 .hero-subline {
+  color: #58707d;
+  font-size: 0.76rem;
+}
+
+.skin-masters-v5 .live-ribbon {
+  border-radius: 0;
+  background: linear-gradient(90deg, #0c452f, #14573b);
+  border: 1px solid rgba(190, 160, 96, 0.4);
+  box-shadow: none;
+  padding: 8px 12px;
+}
+
+.skin-masters-v5 .ticker {
+  font-size: 0.84rem;
+}
+
+.skin-masters-v5 .ticker-meta {
+  color: #eedfb8;
+  font-size: 0.76rem;
+}
+
+.skin-masters-v5 h2 {
+  color: #183947;
+  border-bottom: 1px solid var(--v5-line);
+  margin: 14px 0 8px;
+  padding-bottom: 5px;
+  font-size: 1.06rem;
+}
+
+.skin-masters-v5 .status-card,
+.skin-masters-v5 .event-feed,
+.skin-masters-v5 .participant-card,
+.skin-masters-v5 .rules-section,
+.skin-masters-v5 .sidegame-card {
+  background: var(--v5-surface);
+  border: 1px solid var(--v5-line);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.skin-masters-v5 .status-card,
+.skin-masters-v5 .event-feed,
+.skin-masters-v5 .rules-section {
+  padding: 10px 12px;
+}
+
+.skin-masters-v5 .status-row {
+  border-bottom: 1px solid #e3e9ed;
+  font-size: 0.84rem;
+  padding: 5px 0;
+}
+
+.skin-masters-v5 .event-item {
+  border-radius: 0;
+  border: 1px solid #e1e8ec;
+  background: #fff;
+  padding: 6px 8px;
+}
+
+.skin-masters-v5 .event-time {
+  color: #667883;
+}
+
+.skin-masters-v5 table,
+.skin-masters-v5 #standings,
+.skin-masters-v5 .pick-table,
+.skin-masters-v5 .scorecard-table {
+  border: 1px solid var(--v5-line);
+  border-radius: 0;
+  box-shadow: none;
+  background: #fff;
+}
+
+.skin-masters-v5 thead th {
+  background: #134f36;
+  color: #f1f6f3;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 8px 5px;
+}
+
+.skin-masters-v5 tbody td {
+  font-size: 0.82rem;
+  border-bottom: 1px solid #e7ecef;
+  padding: 6px 5px;
+}
+
+.skin-masters-v5 tbody tr:nth-child(even) {
+  background: #fbfcfc;
+}
+
+.skin-masters-v5 tbody tr:hover {
+  background: #f4f8fa;
+}
+
+.skin-masters-v5 #standings thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.skin-masters-v5 .participant-card {
+  border-top: 2px solid #1f6747;
+}
+
+.skin-masters-v5 .participant-card-header {
+  margin-bottom: 8px;
+}
+
+.skin-masters-v5 .participant-card-header h3 {
+  color: #163544;
+  font-size: 0.98rem;
+}
+
+.skin-masters-v5 .participant-totals {
+  gap: 4px;
+}
+
+.skin-masters-v5 .participant-totals span,
+.skin-masters-v5 .participant-totals strong {
+  border: 1px solid #dde5ea;
+  background: #f7fafb;
+  border-radius: 0;
+  font-size: 0.72rem;
+  padding: 2px 5px;
+}
+
+.skin-masters-v5 .participant-totals strong {
+  background: #e9f4ee;
+  color: #1f5c3f;
+}
+
+.skin-masters-v5 .move-pill {
+  min-width: 24px;
+  border-radius: 0;
+  padding: 1px 3px;
+  font-size: 0.68rem;
+}
+
+.skin-masters-v5 .move-pill.up {
+  background: #dff0e3;
+  color: #145932;
+}
+
+.skin-masters-v5 .move-pill.down {
+  background: #f7e1df;
+  color: #8d221d;
+}
+
+.skin-masters-v5 .move-pill.flat {
+  background: #edf2f4;
+  color: #5c707c;
+}
+
+.skin-masters-v5 .daily-winner-cell {
+  background: #d8efe0 !important;
+  color: #134f31;
+}
+
+.skin-masters-v5 .sidegames-grid,
+.skin-masters-v5 .rules-grid {
+  gap: 6px;
+}
+
+.skin-masters-v5 .sidegame-card,
+.skin-masters-v5 .rules-card {
+  border-radius: 0;
+  border: 1px solid var(--v5-line);
+  border-top: 2px solid #1f6747;
+  box-shadow: none;
+  padding: 8px 9px;
+}
+
+.skin-masters-v5 .rules-card li {
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}
+
+.skin-masters-v5 .rules-footnote {
+  color: #61737f;
+  font-style: normal;
+}
+
+.skin-masters-v5 .scorecard-wrap {
+  border-radius: 0;
+  border-color: var(--v5-line);
+}
+
+.skin-masters-v5 .scorecard-table thead th {
+  background: #145239;
+}
+
+.skin-masters-v5 .day-tab {
+  border-radius: 0;
+  font-size: 0.72rem;
+  padding: 3px 7px;
+}
+
+.skin-masters-v5 .day-tab.active {
+  background: #145239;
+  border-color: #145239;
+}
+
+.skin-masters-v5 .feed-more-btn,
+.skin-masters-v5 #participant-focus {
+  border-radius: 0;
+}
+
+.skin-masters-v5 .feed-more-btn {
+  border: 1px solid #d6dfe4;
+  background: #fff;
+  font-size: 0.74rem;
+}
+
+@media (max-width: 980px) {
+  .skin-masters-v5 .hero-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Final premium skin */
+.skin-masters-v6 {
+  --v6-bg-0: #edf2f3;
+  --v6-bg-1: #f9fbfb;
+  --v6-surface: rgba(255, 255, 255, 0.9);
+  --v6-surface-strong: #ffffff;
+  --v6-border: rgba(18, 56, 74, 0.13);
+  --v6-ink: #102731;
+  --v6-muted: #5f727e;
+  --v6-green-900: #0a3d2a;
+  --v6-green-800: #0f5336;
+  --v6-green-700: #196847;
+  --v6-gold: #c7a25c;
+  --v6-shadow-xs: 0 2px 8px rgba(14, 33, 45, 0.06);
+  --v6-shadow-sm: 0 8px 24px rgba(14, 33, 45, 0.1);
+  --v6-shadow-md: 0 14px 44px rgba(14, 33, 45, 0.15);
+  background:
+    radial-gradient(1100px 560px at 105% -10%, rgba(199, 162, 92, 0.24), transparent 52%),
+    radial-gradient(1000px 520px at -15% -15%, rgba(22, 92, 62, 0.2), transparent 58%),
+    linear-gradient(180deg, var(--v6-bg-1) 0%, var(--v6-bg-0) 100%);
+  color: var(--v6-ink);
+}
+
+.skin-masters-v6 .masthead {
+  background:
+    linear-gradient(90deg, var(--v6-green-900), var(--v6-green-800)),
+    radial-gradient(circle at 80% 10%, rgba(199, 162, 92, 0.22), transparent 40%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 12px 34px rgba(8, 26, 20, 0.32);
+  padding: 12px 26px;
+}
+
+.skin-masters-v6 .brand-lockup {
+  gap: 10px;
+}
+
+.skin-masters-v6 .crest-image {
+  height: 32px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
+
+.skin-masters-v6 .masthead h1 {
+  font-size: clamp(1.08rem, 1.3vw, 1.32rem);
+  letter-spacing: 0.012em;
+}
+
+.skin-masters-v6 .masthead-nav {
+  gap: 10px;
+}
+
+.skin-masters-v6 .masthead-nav span {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(236, 245, 240, 0.94);
+  font-size: 0.64rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 5px 10px;
+}
+
+.skin-masters-v6 .official-site-link {
+  border: 1px solid rgba(199, 162, 92, 0.65);
+  background: linear-gradient(180deg, rgba(199, 162, 92, 0.28), rgba(199, 162, 92, 0.14));
+  color: #f9edd3;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  transition: transform 140ms ease, filter 140ms ease, box-shadow 140ms ease;
+}
+
+.skin-masters-v6 .official-site-link:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 6px 16px rgba(11, 31, 23, 0.28);
+}
+
+.skin-masters-v6 .container {
+  max-width: 1500px;
+  margin-top: 18px;
+}
+
+.skin-masters-v6 .hero-stage {
+  margin-bottom: 10px;
+}
+
+.skin-masters-v6 .hero-copy,
+.skin-masters-v6 .hero-tile,
+.skin-masters-v6 .status-card,
+.skin-masters-v6 .event-feed,
+.skin-masters-v6 .participant-card,
+.skin-masters-v6 .rules-section,
+.skin-masters-v6 .sidegame-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 250, 249, 0.94) 100%);
+  border: 1px solid var(--v6-border);
+  border-radius: 10px;
+  box-shadow: var(--v6-shadow-sm);
+  backdrop-filter: blur(10px) saturate(110%);
+}
+
+.skin-masters-v6 .hero-copy {
+  border-top: 3px solid var(--v6-green-700);
+  padding: 18px 18px 14px;
+}
+
+.skin-masters-v6 .kicker {
+  color: #255f44;
+  font-size: 0.68rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.skin-masters-v6 .hero-copy h2 {
+  color: #183b4a;
+  font-size: clamp(1.2rem, 1.9vw, 1.58rem);
+  text-shadow: none;
+  margin: 0 0 8px;
+}
+
+.skin-masters-v6 .hero-copy p {
+  color: #47606d;
+  text-shadow: none;
+  font-size: 0.93rem;
+}
+
+.skin-masters-v6 .hero-strip {
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.skin-masters-v6 .hero-tile {
+  border-top: 3px solid #1f6948;
+  padding: 11px 12px;
+}
+
+.skin-masters-v6 .hero-label {
+  color: #607481;
+}
+
+.skin-masters-v6 .hero-tile strong {
+  color: #1a3846;
+}
+
+.skin-masters-v6 .hero-subline {
+  color: #546a76;
+}
+
+.skin-masters-v6 .live-ribbon {
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, #0d452f, #155a3b),
+    radial-gradient(circle at 88% 8%, rgba(199, 162, 92, 0.2), transparent 45%);
+  border: 1px solid rgba(199, 162, 92, 0.42);
+  box-shadow: var(--v6-shadow-md);
+}
+
+.skin-masters-v6 .ticker {
+  font-size: 0.86rem;
+}
+
+.skin-masters-v6 .ticker-meta {
+  color: #f1dfb3;
+}
+
+.skin-masters-v6 h2 {
+  color: #1b3c49;
+  border-bottom: 1px solid #d7e2e6;
+  margin: 14px 0 10px;
+  padding-bottom: 6px;
+  font-size: 1.08rem;
+}
+
+.skin-masters-v6 .status-card,
+.skin-masters-v6 .event-feed,
+.skin-masters-v6 .rules-section {
+  padding: 11px 13px;
+}
+
+.skin-masters-v6 .status-row {
+  border-bottom: 1px solid #e4ebee;
+  font-size: 0.85rem;
+}
+
+.skin-masters-v6 .event-item {
+  border-radius: 6px;
+  border: 1px solid #dfe8ec;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfc 100%);
+  box-shadow: var(--v6-shadow-xs);
+}
+
+.skin-masters-v6 .event-time {
+  color: #667985;
+}
+
+.skin-masters-v6 table,
+.skin-masters-v6 #standings,
+.skin-masters-v6 .pick-table,
+.skin-masters-v6 .scorecard-table {
+  border: 1px solid #d9e2e6;
+  border-radius: 8px;
+  box-shadow: var(--v6-shadow-xs);
+  overflow: hidden;
+  background: #fff;
+}
+
+.skin-masters-v6 #standings thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.skin-masters-v6 thead th {
+  background: linear-gradient(180deg, #16563b, #124c34);
+  color: #f2f6f4;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.69rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 8px 6px;
+}
+
+.skin-masters-v6 tbody td {
+  border-bottom: 1px solid #e7edf0;
+  font-size: 0.83rem;
+  padding: 6px 6px;
+}
+
+.skin-masters-v6 tbody tr:nth-child(even) {
+  background: #fafcfc;
+}
+
+.skin-masters-v6 tbody tr:hover {
+  background: #f2f7f9;
+}
+
+.skin-masters-v6 .participant-card,
+.skin-masters-v6 .rules-section,
+.skin-masters-v6 .sidegame-card {
+  border-top: 2px solid #1f6747;
+}
+
+.skin-masters-v6 .participant-card-header h3 {
+  color: #183745;
+  font-size: 1rem;
+}
+
+.skin-masters-v6 .participant-totals {
+  gap: 4px;
+}
+
+.skin-masters-v6 .participant-totals span,
+.skin-masters-v6 .participant-totals strong {
+  border: 1px solid #dce5e9;
+  background: #f8fbfb;
+  border-radius: 4px;
+  font-size: 0.73rem;
+  padding: 2px 6px;
+}
+
+.skin-masters-v6 .participant-totals strong {
+  background: #eaf5ee;
+  color: #205b40;
+}
+
+.skin-masters-v6 .move-pill {
+  border-radius: 4px;
+  min-width: 28px;
+  padding: 1px 4px;
+  font-size: 0.68rem;
+}
+
+.skin-masters-v6 .move-pill.up {
+  background: #dff1e4;
+  color: #145932;
+}
+
+.skin-masters-v6 .move-pill.down {
+  background: #f8e1df;
+  color: #8d221d;
+}
+
+.skin-masters-v6 .move-pill.flat {
+  background: #edf2f4;
+  color: #5d717e;
+}
+
+.skin-masters-v6 .daily-winner-cell {
+  background: #d9efe1 !important;
+  color: #135233;
+}
+
+.skin-masters-v6 .sidegames-grid,
+.skin-masters-v6 .rules-grid {
+  gap: 8px;
+}
+
+.skin-masters-v6 .sidegame-card,
+.skin-masters-v6 .rules-card {
+  border-radius: 8px;
+  border: 1px solid #d9e2e6;
+  border-top: 2px solid #1f6848;
+  box-shadow: var(--v6-shadow-xs);
+  padding: 8px 10px;
+}
+
+.skin-masters-v6 .rules-card li {
+  font-size: 0.79rem;
+}
+
+.skin-masters-v6 .rules-footnote {
+  color: #5e727f;
+  font-style: normal;
+}
+
+.skin-masters-v6 .scorecard-wrap {
+  border-color: #dbe4e8;
+  border-radius: 8px;
+}
+
+.skin-masters-v6 .scorecard-table thead th {
+  background: linear-gradient(180deg, #17583c, #135139);
+}
+
+.skin-masters-v6 .day-tab {
+  border-radius: 4px;
+  font-size: 0.73rem;
+}
+
+.skin-masters-v6 .day-tab.active {
+  background: #155238;
+  border-color: #155238;
+}
+
+.skin-masters-v6 .feed-more-btn,
+.skin-masters-v6 #participant-focus {
+  border-radius: 4px;
+}
+
+.skin-masters-v6 .feed-more-btn {
+  border: 1px solid #d6dfe4;
+  background: #fff;
+  box-shadow: var(--v6-shadow-xs);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skin-masters-v6 .hero-tile,
+  .skin-masters-v6 .participant-card,
+  .skin-masters-v6 .sidegame-card,
+  .skin-masters-v6 .rules-card,
+  .skin-masters-v6 .event-item,
+  .skin-masters-v6 .feed-more-btn,
+  .skin-masters-v6 .day-tab,
+  .skin-masters-v6 .official-site-link {
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
+  }
+
+  .skin-masters-v6 .hero-tile:hover,
+  .skin-masters-v6 .participant-card:hover,
+  .skin-masters-v6 .sidegame-card:hover,
+  .skin-masters-v6 .rules-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--v6-shadow-md);
+    border-color: #c7d5dc;
+  }
+
+  .skin-masters-v6 .event-item:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--v6-shadow-sm);
+  }
+}
+
+@media (max-width: 980px) {
+  .skin-masters-v6 .masthead {
+    padding: 12px 16px;
+  }
+
+  .skin-masters-v6 .hero-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Final design polish pass */
+.skin-masters-v7 {
+  --v7-bg: #eef3f4;
+  --v7-bg-top: #f9fcfc;
+  --v7-surface: #ffffff;
+  --v7-surface-soft: #f7faf9;
+  --v7-border: #d4dde1;
+  --v7-ink: #0f2430;
+  --v7-muted: #5e727e;
+  --v7-green-950: #072f20;
+  --v7-green-900: #0a3f2a;
+  --v7-green-800: #115637;
+  --v7-green-700: #1b6b46;
+  --v7-gold: #c9a763;
+  --v7-shadow-1: 0 3px 10px rgba(14, 35, 50, 0.06);
+  --v7-shadow-2: 0 10px 26px rgba(14, 35, 50, 0.1);
+  --v7-shadow-3: 0 18px 48px rgba(14, 35, 50, 0.16);
+  color: var(--v7-ink);
+  background:
+    radial-gradient(1300px 620px at 100% -15%, rgba(201, 167, 99, 0.2), transparent 55%),
+    radial-gradient(1100px 560px at -10% -20%, rgba(17, 86, 55, 0.16), transparent 60%),
+    linear-gradient(180deg, var(--v7-bg-top) 0%, var(--v7-bg) 100%);
+}
+
+.skin-masters-v7 .masthead {
+  background:
+    linear-gradient(90deg, var(--v7-green-950), var(--v7-green-900)),
+    radial-gradient(circle at 80% 10%, rgba(201, 167, 99, 0.22), transparent 40%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 30px rgba(7, 25, 18, 0.32);
+  padding: 12px 26px;
+  backdrop-filter: blur(6px) saturate(120%);
+}
+
+.skin-masters-v7 .brand-lockup {
+  gap: 10px;
+}
+
+.skin-masters-v7 .crest-image {
+  height: 32px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.36));
+}
+
+.skin-masters-v7 .masthead h1 {
+  font-size: clamp(1.08rem, 1.35vw, 1.34rem);
+  letter-spacing: 0.012em;
+}
+
+.skin-masters-v7 .masthead-nav {
+  gap: 10px;
+}
+
+.skin-masters-v7 .masthead-nav span {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  color: rgba(235, 245, 240, 0.93);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+}
+
+.skin-masters-v7 .official-site-link {
+  border: 1px solid rgba(201, 167, 99, 0.7);
+  background: linear-gradient(180deg, rgba(201, 167, 99, 0.32), rgba(201, 167, 99, 0.14));
+  color: #f8ecd3;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+.skin-masters-v7 .official-site-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(10, 32, 23, 0.32);
+  filter: brightness(1.05);
+}
+
+.skin-masters-v7 .container {
+  max-width: 1520px;
+  margin-top: 18px;
+  padding-bottom: 48px;
+}
+
+.skin-masters-v7 .hero-stage {
+  margin-bottom: 10px;
+}
+
+.skin-masters-v7 .hero-copy,
+.skin-masters-v7 .hero-tile,
+.skin-masters-v7 .status-card,
+.skin-masters-v7 .event-feed,
+.skin-masters-v7 .participant-card,
+.skin-masters-v7 .rules-section,
+.skin-masters-v7 .sidegame-card {
+  background: linear-gradient(180deg, var(--v7-surface) 0%, var(--v7-surface-soft) 100%);
+  border: 1px solid var(--v7-border);
+  border-radius: 12px;
+  box-shadow: var(--v7-shadow-2);
+}
+
+.skin-masters-v7 .hero-copy {
+  border-top: 3px solid var(--v7-green-700);
+  padding: 18px 18px 15px;
+}
+
+.skin-masters-v7 .kicker {
+  color: #296547;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.skin-masters-v7 .hero-copy h2 {
+  color: #193c4b;
+  margin: 0 0 8px;
+  font-size: clamp(1.2rem, 2vw, 1.62rem);
+  line-height: 1.25;
+  text-shadow: none;
+}
+
+.skin-masters-v7 .hero-copy p {
+  color: #47616e;
+  font-size: 0.92rem;
+  text-shadow: none;
+}
+
+.skin-masters-v7 .hero-strip {
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.skin-masters-v7 .hero-tile {
+  border-top: 3px solid #1f6a49;
+  padding: 10px 12px;
+}
+
+.skin-masters-v7 .hero-label {
+  color: #617682;
+  font-size: 0.66rem;
+}
+
+.skin-masters-v7 .hero-tile strong {
+  color: #1b3947;
+}
+
+.skin-masters-v7 .hero-subline {
+  color: #556d79;
+}
+
+.skin-masters-v7 .live-ribbon {
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, #0d4630, #155b3d),
+    radial-gradient(circle at 88% 10%, rgba(201, 167, 99, 0.2), transparent 45%);
+  border: 1px solid rgba(201, 167, 99, 0.44);
+  box-shadow: var(--v7-shadow-3);
+  padding: 9px 13px;
+}
+
+.skin-masters-v7 .ticker {
+  font-size: 0.86rem;
+}
+
+.skin-masters-v7 .ticker-meta {
+  color: #f2e2bb;
+  font-size: 0.76rem;
+}
+
+.skin-masters-v7 h2 {
+  color: #1b3d4b;
+  border-bottom: 1px solid #d8e2e7;
+  margin: 14px 0 10px;
+  padding-bottom: 6px;
+  font-size: 1.1rem;
+  letter-spacing: 0.01em;
+}
+
+.skin-masters-v7 .status-card,
+.skin-masters-v7 .event-feed,
+.skin-masters-v7 .rules-section {
+  padding: 11px 13px;
+}
+
+.skin-masters-v7 .status-row {
+  border-bottom: 1px solid #e4ebef;
+  font-size: 0.85rem;
+}
+
+.skin-masters-v7 .label {
+  color: #506570;
+}
+
+.skin-masters-v7 .event-item {
+  border-radius: 8px;
+  border: 1px solid #dfe8ec;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfc 100%);
+  box-shadow: var(--v7-shadow-1);
+}
+
+.skin-masters-v7 .event-time {
+  color: #667a86;
+}
+
+.skin-masters-v7 table,
+.skin-masters-v7 #standings,
+.skin-masters-v7 .pick-table,
+.skin-masters-v7 .scorecard-table {
+  border: 1px solid #d9e3e7;
+  border-radius: 10px;
+  box-shadow: var(--v7-shadow-1);
+  overflow: hidden;
+  background: #fff;
+}
+
+.skin-masters-v7 #standings thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.skin-masters-v7 thead th {
+  background: linear-gradient(180deg, #17593d, #134f35);
+  color: #f2f6f4;
+  border-right: 1px solid rgba(255, 255, 255, 0.11);
+  font-size: 0.69rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 8px 6px;
+}
+
+.skin-masters-v7 tbody td {
+  border-bottom: 1px solid #e8edf1;
+  font-size: 0.83rem;
+  padding: 6px 6px;
+}
+
+.skin-masters-v7 tbody tr:nth-child(even) {
+  background: #fbfcfc;
+}
+
+.skin-masters-v7 tbody tr:hover {
+  background: #f2f7f9;
+}
+
+.skin-masters-v7 .participant-card,
+.skin-masters-v7 .rules-section,
+.skin-masters-v7 .sidegame-card {
+  border-top: 2px solid #1f6848;
+}
+
+.skin-masters-v7 .participant-card-header h3 {
+  color: #193a49;
+  font-size: 1rem;
+}
+
+.skin-masters-v7 .participant-totals {
+  gap: 4px;
+}
+
+.skin-masters-v7 .participant-totals span,
+.skin-masters-v7 .participant-totals strong {
+  border: 1px solid #dce5ea;
+  background: #f8fbfb;
+  border-radius: 6px;
+  font-size: 0.73rem;
+  padding: 2px 6px;
+}
+
+.skin-masters-v7 .participant-totals strong {
+  background: #eaf5ee;
+  color: #1f5b40;
+}
+
+.skin-masters-v7 .move-pill {
+  border-radius: 6px;
+  min-width: 28px;
+  padding: 1px 4px;
+  font-size: 0.68rem;
+}
+
+.skin-masters-v7 .move-pill.up {
+  background: #dff1e4;
+  color: #145932;
+}
+
+.skin-masters-v7 .move-pill.down {
+  background: #f8e1df;
+  color: #8d221d;
+}
+
+.skin-masters-v7 .move-pill.flat {
+  background: #edf2f4;
+  color: #5d717e;
+}
+
+.skin-masters-v7 .daily-winner-cell {
+  background: #d9efe1 !important;
+  color: #145334;
+}
+
+.skin-masters-v7 .sidegames-grid,
+.skin-masters-v7 .rules-grid {
+  gap: 8px;
+}
+
+.skin-masters-v7 .sidegame-card,
+.skin-masters-v7 .rules-card {
+  border-radius: 10px;
+  border: 1px solid #d9e3e8;
+  border-top: 2px solid #1f6848;
+  box-shadow: var(--v7-shadow-1);
+  padding: 8px 10px;
+}
+
+.skin-masters-v7 .rules-card li {
+  font-size: 0.79rem;
+}
+
+.skin-masters-v7 .rules-footnote {
+  color: #5f7380;
+  font-style: normal;
+}
+
+.skin-masters-v7 .scorecard-wrap {
+  border-color: #dce5e9;
+  border-radius: 10px;
+}
+
+.skin-masters-v7 .scorecard-table thead th {
+  background: linear-gradient(180deg, #185b3f, #14533a);
+}
+
+.skin-masters-v7 .day-tab {
+  border-radius: 6px;
+  font-size: 0.73rem;
+}
+
+.skin-masters-v7 .day-tab.active {
+  background: #16573c;
+  border-color: #16573c;
+}
+
+.skin-masters-v7 .feed-more-btn,
+.skin-masters-v7 #participant-focus {
+  border-radius: 6px;
+}
+
+.skin-masters-v7 .feed-more-btn {
+  border: 1px solid #d6e0e5;
+  background: #fff;
+  box-shadow: var(--v7-shadow-1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skin-masters-v7 .hero-tile,
+  .skin-masters-v7 .participant-card,
+  .skin-masters-v7 .sidegame-card,
+  .skin-masters-v7 .rules-card,
+  .skin-masters-v7 .event-item,
+  .skin-masters-v7 .feed-more-btn,
+  .skin-masters-v7 .day-tab,
+  .skin-masters-v7 .official-site-link {
+    transition: transform 170ms ease, box-shadow 170ms ease, border-color 170ms ease, background-color 170ms ease;
+  }
+
+  .skin-masters-v7 .hero-tile:hover,
+  .skin-masters-v7 .participant-card:hover,
+  .skin-masters-v7 .sidegame-card:hover,
+  .skin-masters-v7 .rules-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--v7-shadow-3);
+    border-color: #c6d4db;
+  }
+
+  .skin-masters-v7 .event-item:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--v7-shadow-2);
+  }
+}
+
+@media (max-width: 980px) {
+  .skin-masters-v7 .masthead {
+    padding: 12px 16px;
+  }
+
+  .skin-masters-v7 .hero-strip {
+    grid-template-columns: 1fr;
+  }
+}

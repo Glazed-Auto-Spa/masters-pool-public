@@ -18,9 +18,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260409c') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260409h') }}" />
   </head>
-  <body class="skin-masters-v2">
+  <body class="skin-masters-v7">
     <header class="masthead">
       <div class="brand-lockup">
         <img
@@ -33,9 +33,6 @@
         </div>
       </div>
       <nav class="masthead-nav">
-        <span>Leaderboard</span>
-        <span>Scorecards</span>
-        <span>Side Games</span>
         <a
           class="official-site-link"
           href="https://www.masters.com/en_US/scores/index.html"
@@ -50,11 +47,10 @@
     <main class="container">
       <section class="hero-stage">
         <div class="hero-copy">
-          <p class="kicker">A tradition unlike any other pool</p>
-          <h2>Live scoring, side games, and scorecards in one place.</h2>
+          <p class="kicker">Live Tournament View</p>
+          <h2>Masters Pool Leaderboard</h2>
           <p>
-            Real-time Masters field ingestion with payout-grade auditability.
-            Birdies get circles, bogeys get boxes, and nobody can argue with the ledger.
+            Live field data, standings movement, and participant scorecards.
           </p>
         </div>
       </section>
@@ -254,7 +250,6 @@
                   <th>Sat</th>
                   <th>Sun</th>
                   <th>Field</th>
-                  <th>Through</th>
                   <th>Total</th>
                   <th>Status</th>
                 </tr>
@@ -279,7 +274,6 @@
                     {{ pick.get("fieldPosition", "-") }}
                     ({% if pick.get("scoreToPar") is not none %}{% if pick.get("scoreToPar") > 0 %}+{% endif %}{{ pick.get("scoreToPar") }}{% else %}--{% endif %})
                   </td>
-                  <td>{{ pick.get("throughDisplay", "-") }}</td>
                   <td>
                     <strong>
                       {{ to_par(pick.dayScores.get("1", pick.dayScores.get(1, 0))
@@ -288,7 +282,7 @@
                         + pick.dayScores.get("4", pick.dayScores.get(4, 0))) }}
                     </strong>
                   </td>
-                  <td>{{ pick.status }}</td>
+                  <td>{{ pick.status if pick.status else (pick.get("throughDisplay", "LIVE") if pick.get("throughDisplay", "-") != "-" else "LIVE") }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -617,6 +611,9 @@
             const fieldPos = pick.fieldPosition || "-";
             const scoreToParText = formatToPar(pick.scoreToPar);
             const throughText = pick.throughDisplay || "-";
+            const statusText = (typeof pick.status === "string" && pick.status.trim())
+              ? pick.status.trim()
+              : (throughText !== "-" ? throughText : "LIVE");
             return `
               <tr>
                 <td>${pick.playerName}</td>
@@ -625,9 +622,8 @@
                 <td>${formatToPar(getDailyScore(scores, 3))}</td>
                 <td>${formatToPar(getDailyScore(scores, 4))}</td>
                 <td>${fieldPos} (${scoreToParText})</td>
-                <td>${throughText}</td>
                 <td><strong>${formatToPar(total)}</strong></td>
-                <td>${pick.status || ""}</td>
+                <td>${statusText}</td>
               </tr>
             `;
           }).join("");
@@ -714,18 +710,16 @@
                   <th>Sat</th>
                   <th>Sun</th>
                   <th>Field</th>
-                  <th>Through</th>
                   <th>Total</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>${pickRows}</tbody>
             </table>
-            <details class="scorecard-details">
-              <summary>Show hole-by-hole scorecards</summary>
+            <div class="scorecard-details always-open">
               <div class="day-tabs">${dayTabs}</div>
               <div class="scorecards-by-day">${dayBlocks}</div>
-            </details>
+            </div>
             <p class="legend">All picks count each day.</p>
           `;
           root.appendChild(card);
