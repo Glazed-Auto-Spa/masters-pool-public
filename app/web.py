@@ -52,30 +52,5 @@ def create_app(base_dir: Path) -> Flask:
         except Exception as exc:  # noqa: BLE001
             return jsonify({"ok": False, "error": str(exc)}), 500
 
-    @app.post("/api/sidegame-poll/vote")
-    def api_sidegame_poll_vote():
-        payload = request.get_json(silent=True) or {}
-        try:
-            state = service.submit_sidegame_poll_vote(
-                voter=str(payload.get("voter", "")).strip(),
-                game=str(payload.get("game", "")).strip(),
-                vote=str(payload.get("vote", "")).strip(),
-            )
-            return jsonify({"ok": True, "state": state})
-        except ValueError as exc:
-            return jsonify({"ok": False, "error": str(exc)}), 400
-        except Exception as exc:  # noqa: BLE001
-            return jsonify({"ok": False, "error": str(exc)}), 500
-
-    @app.post("/api/sidegame-poll/reset")
-    def api_sidegame_poll_reset():
-        try:
-            state = service.reset_sidegame_poll_tallies()
-            return jsonify({"ok": True, "state": state})
-        except ValueError as exc:
-            return jsonify({"ok": False, "error": str(exc)}), 400
-        except Exception as exc:  # noqa: BLE001
-            return jsonify({"ok": False, "error": str(exc)}), 500
-
     return app
 
