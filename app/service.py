@@ -51,6 +51,10 @@ class PoolService:
                 "errors": errors,
                 **standings,
             }
+            state["sideGamePoll"] = _extract_sidegame_poll(
+                state=previous_state,
+                participant_names=[participant.name for participant in self.config.participants],
+            )
             payout_ok, payout_reason = _validate_payout_state(
                 leaderboard=state.get("leaderboard", []),
                 participant_count=len(self.config.participants),
@@ -78,6 +82,10 @@ class PoolService:
             else:
                 historical_feed = []
             state["eventFeed"] = ([_normalize_event_entry(entry) for entry in cycle_feed] + historical_feed)[:300]
+            state = _with_sidegame_poll_summary(
+                state=state,
+                participant_names=[participant.name for participant in self.config.participants],
+            )
             self.store.write_state(state)
             self.store.append_ledger("state", state)
             return state
@@ -88,7 +96,79 @@ class PoolService:
             return {}
         if state.get("stateSchemaVersion") != STATE_SCHEMA_VERSION:
             return {}
-        return state
+        return _with_sidegame_poll_summary(
+            state=state,
+            participant_names=[participant.name for participant in self.config.participants],
+        )
+
+    def submit_sidegame_poll_vote(self, *, voter: str, game: str, vote: str) -> dict[str, Any]:
+        participant_names = [participant.name for participant in self.config.participants]
+        normalized_voter = str(voter or "").strip()
+        normalized_game = str(game or "").strip()
+        normalized_vote = str(vote or "").strip().lower()
+        if normalized_voter not in participant_names:
+            raise ValueError("voter must be a valid participant")
+        is_sidegame_vote = normalized_game in SIDEGAME_POLL_GAME_KEYS
+        is_start_day_vote = normalized_game == START_DAY_POLICY_KEY
+        if not is_sidegame_vote and not is_start_day_vote:
+            raise ValueError("invalid poll target")
+        if is_sidegame_vote and normalized_vote not in SIDEGAME_POLL_OPTIONS:
+            raise ValueError("invalid vote option")
+        if is_start_day_vote and normalized_vote not in START_DAY_OPTIONS:
+            raise ValueError("invalid start day option")
+
+        with self.store.acquire_poll_lock(blocking=True):
+            state = self.store.read_state()
+            if not isinstance(state, dict):
+                raise ValueError("state unavailable")
+            if state.get("stateSchemaVersion") != STATE_SCHEMA_VERSION:
+                raise ValueError("state schema mismatch")
+
+            poll = _extract_sidegame_poll(state=state, participant_names=participant_names)
+            if is_start_day_vote:
+                votes_by_voter = poll[START_DAY_POLICY_KEY]["votes"]
+            else:
+                votes_by_voter = poll["games"][normalized_game]["votes"]
+            if normalized_voter in votes_by_voter:
+                raise ValueError(f"{normalized_voter} has already voted for {normalized_game}")
+            votes_by_voter[normalized_voter] = normalized_vote
+            state["sideGamePoll"] = poll
+            state = _with_sidegame_poll_summary(state=state, participant_names=participant_names)
+            self.store.write_state(state)
+            self.store.append_ledger(
+                "sidegame_poll_vote",
+                {
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "voter": normalized_voter,
+                    "game": normalized_game,
+                    "vote": normalized_vote,
+                },
+            )
+            return state
+
+    def reset_sidegame_poll_tallies(self) -> dict[str, Any]:
+        participant_names = [participant.name for participant in self.config.participants]
+        with self.store.acquire_poll_lock(blocking=True):
+            state = self.store.read_state()
+            if not isinstance(state, dict):
+                raise ValueError("state unavailable")
+            if state.get("stateSchemaVersion") != STATE_SCHEMA_VERSION:
+                raise ValueError("state schema mismatch")
+
+            poll = _extract_sidegame_poll(state=state, participant_names=participant_names)
+            for game in SIDEGAME_POLL_GAME_KEYS:
+                poll["games"][game]["votes"] = {}
+            poll[START_DAY_POLICY_KEY]["votes"] = {}
+            state["sideGamePoll"] = poll
+            state = _with_sidegame_poll_summary(state=state, participant_names=participant_names)
+            self.store.write_state(state)
+            self.store.append_ledger(
+                "sidegame_poll_reset",
+                {
+                    "timestamp": datetime.now(UTC).isoformat(),
+                },
+            )
+            return state
 
     def _tracked_players(self, all_players: dict[int, str]) -> dict[int, str]:
         needed: set[int] = set()
@@ -458,4 +538,103 @@ def _validate_payout_state(leaderboard: list[dict[str, Any]], participant_count:
     if abs(net_sum) > 0.01:
         return False, "net payouts do not sum to zero"
     return True, "ok"
+
+
+SIDEGAME_POLL_GAME_KEYS = ("eagles", "aces", "streaks", "dailyWinners")
+SIDEGAME_POLL_OPTIONS = ("keep", "remove")
+START_DAY_POLICY_KEY = "startDayPolicy"
+START_DAY_OPTIONS = ("day1", "day2")
+SIDEGAME_POLL_THRESHOLD = 5
+
+
+def _extract_sidegame_poll(state: dict[str, Any], participant_names: list[str]) -> dict[str, Any]:
+    incoming = state.get("sideGamePoll", {}) if isinstance(state, dict) else {}
+    incoming_games = incoming.get("games", {}) if isinstance(incoming, dict) else {}
+
+    games: dict[str, dict[str, dict[str, str]]] = {}
+    valid_voters = set(participant_names)
+    for game in SIDEGAME_POLL_GAME_KEYS:
+        game_data = incoming_games.get(game, {}) if isinstance(incoming_games, dict) else {}
+        raw_votes = game_data.get("votes", {}) if isinstance(game_data, dict) else {}
+        votes: dict[str, str] = {}
+        if isinstance(raw_votes, dict):
+            for voter, choice in raw_votes.items():
+                voter_name = str(voter).strip()
+                vote_choice = str(choice).strip().lower()
+                if voter_name in valid_voters and vote_choice in SIDEGAME_POLL_OPTIONS:
+                    votes[voter_name] = vote_choice
+        games[game] = {"votes": votes}
+
+    raw_start_day_votes = incoming.get(START_DAY_POLICY_KEY, {}).get("votes", {}) if isinstance(incoming, dict) else {}
+    start_day_votes: dict[str, str] = {}
+    if isinstance(raw_start_day_votes, dict):
+        for voter, choice in raw_start_day_votes.items():
+            voter_name = str(voter).strip()
+            option = str(choice).strip().lower()
+            if voter_name in valid_voters and option in START_DAY_OPTIONS:
+                start_day_votes[voter_name] = option
+
+    return {
+        "active": bool(incoming.get("active", True)) if isinstance(incoming, dict) else True,
+        "threshold": int(incoming.get("threshold", SIDEGAME_POLL_THRESHOLD)) if isinstance(incoming, dict) else SIDEGAME_POLL_THRESHOLD,
+        "games": games,
+        START_DAY_POLICY_KEY: {"votes": start_day_votes},
+    }
+
+
+def _with_sidegame_poll_summary(state: dict[str, Any], participant_names: list[str]) -> dict[str, Any]:
+    poll = _extract_sidegame_poll(state=state, participant_names=participant_names)
+    threshold = int(poll.get("threshold", SIDEGAME_POLL_THRESHOLD))
+    summaries: dict[str, dict[str, Any]] = {}
+    for game, game_data in poll.get("games", {}).items():
+        votes = game_data.get("votes", {}) if isinstance(game_data, dict) else {}
+        keep_voters = sorted([name for name, choice in votes.items() if choice == "keep"])
+        remove_voters = sorted([name for name, choice in votes.items() if choice == "remove"])
+        keep_count = len(keep_voters)
+        remove_count = len(remove_voters)
+        total = keep_count + remove_count
+        decided_option = None
+        if total >= threshold and keep_count != remove_count:
+            decided_option = "keep" if keep_count > remove_count else "remove"
+        summaries[game] = {
+            "keepCount": keep_count,
+            "removeCount": remove_count,
+            "totalVotes": total,
+            "threshold": threshold,
+            "decidedOption": decided_option,
+            "hasMajority": decided_option is not None,
+            "keepVoters": keep_voters,
+            "removeVoters": remove_voters,
+            "voters": sorted(
+                [{"name": name, "vote": choice} for name, choice in votes.items()],
+                key=lambda item: item["name"],
+            ),
+        }
+    start_day_section = poll.get(START_DAY_POLICY_KEY, {})
+    start_day_votes = start_day_section.get("votes", {}) if isinstance(start_day_section, dict) else {}
+    day1_voters = sorted([name for name, choice in start_day_votes.items() if choice == "day1"])
+    day2_voters = sorted([name for name, choice in start_day_votes.items() if choice == "day2"])
+    day1_count = len(day1_voters)
+    day2_count = len(day2_voters)
+    total_day_votes = day1_count + day2_count
+    day_decided = None
+    if total_day_votes >= threshold and day1_count != day2_count:
+        day_decided = "day1" if day1_count > day2_count else "day2"
+    summaries[START_DAY_POLICY_KEY] = {
+        "day1Count": day1_count,
+        "day2Count": day2_count,
+        "totalVotes": total_day_votes,
+        "threshold": threshold,
+        "decidedOption": day_decided,
+        "hasMajority": day_decided is not None,
+        "day1Voters": day1_voters,
+        "day2Voters": day2_voters,
+        "voters": sorted(
+            [{"name": name, "vote": choice} for name, choice in start_day_votes.items()],
+            key=lambda item: item["name"],
+        ),
+    }
+    poll["summaries"] = summaries
+    state["sideGamePoll"] = poll
+    return state
 

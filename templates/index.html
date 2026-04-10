@@ -18,7 +18,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260409i') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260409m') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -139,6 +139,25 @@
             <button id="share-standings" type="button">Share</button>
           </div>
         </div>
+        <div class="poll-identity-panel">
+          <label for="poll-voter"><strong>Before voting:</strong> choose who you are</label>
+          <select id="poll-voter">
+            <option value="">Select participant</option>
+            {% for participant in config.participants %}
+            <option value="{{ participant.name }}">{{ participant.name }}</option>
+            {% endfor %}
+          </select>
+          <span id="poll-identity-state" class="poll-identity-state">No voter selected</span>
+        </div>
+        <div class="poll-start-day-panel">
+          <div class="poll-start-day-title">Should side games start on Day 1 or Day 2?</div>
+          <div class="poll-start-day-buttons">
+            <button type="button" class="poll-vote-btn day" data-game="startDayPolicy" data-vote="day1" disabled>Day 1</button>
+            <button type="button" class="poll-vote-btn day" data-game="startDayPolicy" data-vote="day2" disabled>Day 2</button>
+          </div>
+          <div id="poll-start-day-meta" class="poll-vote-meta">Select your name to vote.</div>
+          <div id="poll-start-day-voters" class="poll-vote-voters">No votes yet.</div>
+        </div>
         <table id="standings">
           <thead>
             <tr>
@@ -159,6 +178,15 @@
               <th title="Side Bet Net = For-everyone side-game settlement. Net_i = (N * S_i - sum(S)) / (N - 1), where S_i includes Eagles + Aces + Streaks + Daily Winners.">Side Bet Net</th>
               <th>Tiebreak Pick</th>
               <th>Tiebreak Diff</th>
+            </tr>
+            <tr class="poll-vote-row">
+              <th colspan="10"></th>
+              <th id="poll-cell-eagles" class="poll-vote-cell">Poll loading...</th>
+              <th id="poll-cell-aces" class="poll-vote-cell">Poll loading...</th>
+              <th id="poll-cell-streaks" class="poll-vote-cell">Poll loading...</th>
+              <th id="poll-cell-dailyWinners" class="poll-vote-cell">Poll loading...</th>
+              <th class="poll-vote-cell poll-vote-cell-muted">Hidden during poll</th>
+              <th colspan="2"></th>
             </tr>
           </thead>
           <tbody id="standings-body">
@@ -187,11 +215,11 @@
               <td class="{{ 'daily-winner-cell' if 4 in day_wins else '' }}">{{ to_par(row.dailyScores.get("4", row.dailyScores.get(4, 0))) }}</td>
               <td><strong>{{ to_par(row.eventScore) }}</strong></td>
               <td><strong>${{ row.mainEventPayoutDollars if row.mainEventPayoutDollars is not none else ((config.participants|length) * 25 if row.rank == 1 else 0) }}</strong></td>
-              <td>${{ row.eagleBonusDollars }}</td>
-              <td>${{ row.aceBonusDollars }}</td>
-              <td>${{ row.birdieStreakBonusDollars }}</td>
-              <td>${{ row.get("dailyWinnerBonusDollars", 0) }}</td>
-              <td><strong>${{ '%.2f'|format(row.netPayoutDollars or 0) }}</strong></td>
+              <td>--</td>
+              <td>--</td>
+              <td>--</td>
+              <td>--</td>
+              <td><strong>--</strong></td>
               <td>{{ to_par(row.predictedWinningToPar) }}</td>
               <td>{{ row.tiebreakDiff if row.tiebreakDiff is not none else "-" }}</td>
             </tr>
@@ -205,33 +233,37 @@
         <div class="sidegames-grid">
           <article class="sidegame-card">
             <h3>Eagles ($10)</h3>
+            <p class="sidegame-rule">Rule: each eagle by any golfer on your roster counts as one eagle event for this side game.</p>
             <ol id="side-eagles">
               {% for row in state.get("sideGameLeaders", {}).get("eagles", [])[:3] %}
-              <li>{{ row.name }} - ${{ row.amount }}</li>
+              <li>{{ row.name }}</li>
               {% endfor %}
             </ol>
           </article>
           <article class="sidegame-card">
             <h3>Aces ($20)</h3>
+            <p class="sidegame-rule">Rule: each hole-in-one (ace) by any golfer on your roster counts as one ace event.</p>
             <ol id="side-aces">
               {% for row in state.get("sideGameLeaders", {}).get("aces", [])[:3] %}
-              <li>{{ row.name }} - ${{ row.amount }}</li>
+              <li>{{ row.name }}</li>
               {% endfor %}
             </ol>
           </article>
           <article class="sidegame-card">
             <h3>Birdie Streaks ($10)</h3>
+            <p class="sidegame-rule">Rule: a streak starts at 3 straight birdie-or-better holes, then extends with +1 event for each additional consecutive qualifying hole.</p>
             <ol id="side-streaks">
               {% for row in state.get("sideGameLeaders", {}).get("streaks", [])[:3] %}
-              <li>{{ row.name }} - ${{ row.amount }}</li>
+              <li>{{ row.name }}</li>
               {% endfor %}
             </ol>
           </article>
           <article class="sidegame-card">
             <h3>Daily Winners ($10/day)</h3>
+            <p class="sidegame-rule">Rule: each day (Thu/Fri/Sat/Sun), the single lowest team score wins that day’s event. Future days do not count until they begin.</p>
             <ol id="side-daily-winners">
               {% for row in state.get("sideGameLeaders", {}).get("dailyWinners", [])[:3] %}
-              <li>{{ row.name }} - ${{ row.amount }}</li>
+              <li>{{ row.name }}</li>
               {% endfor %}
             </ol>
           </article>
@@ -370,8 +402,16 @@
       let latestFeed = [];
       let latestLeaderboard = [];
       let latestParticipants = [];
+      let latestSideGamePoll = null;
       let standingsSignature = "";
       let participantsSignature = "";
+      const SIDEGAME_POLL_GAMES = {
+        eagles: "Eagles",
+        aces: "Aces",
+        streaks: "Streaks",
+        dailyWinners: "Daily Winners",
+      };
+      const START_DAY_POLICY_KEY = "startDayPolicy";
       const phxFormatter = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Phoenix",
         year: "numeric",
@@ -448,7 +488,7 @@
           const prev = row.previousRank ?? prevRanks[row.name];
           const dayWins = new Set((row.dailyWinnerDays || []).map((v) => Number(v)));
           const dayClass = (day) => (dayWins.has(day) ? "daily-winner-cell" : "");
-          const statusBreakdown = `Eagles: $${row.eagleBonusDollars || 0} | Aces: $${row.aceBonusDollars || 0} | Streaks: $${row.birdieStreakBonusDollars || 0} | Daily: $${row.dailyWinnerBonusDollars || 0}`;
+          const statusBreakdown = `Eagles: hidden | Aces: hidden | Streaks: hidden | Daily: hidden`;
           tr.className = moved ? (row.rank < prev ? "rank-up-row" : "rank-down-row") : "";
           tr.innerHTML = `
             <td>${row.rank}</td>
@@ -461,11 +501,11 @@
             <td class="${dayClass(4)}">${formatToPar(getDailyScore(row.dailyScores || {}, 4))}</td>
             <td><strong>${formatToPar(row.eventScore)}</strong></td>
             <td><strong>${mainEventPayoutForRow(row, rows) === null ? "--" : `$${mainEventPayoutForRow(row, rows)}`}</strong></td>
-            <td>$${row.eagleBonusDollars}</td>
-            <td>$${row.aceBonusDollars}</td>
-            <td>$${row.birdieStreakBonusDollars}</td>
-            <td>$${row.dailyWinnerBonusDollars ?? 0}</td>
-            <td title="${statusBreakdown}"><strong>${row.netPayoutDollars === null || row.netPayoutDollars === undefined ? "--" : `$${formatCurrency(row.netPayoutDollars)}`}</strong></td>
+            <td>--</td>
+            <td>--</td>
+            <td>--</td>
+            <td>--</td>
+            <td title="${statusBreakdown}"><strong>--</strong></td>
             <td>${formatToPar(row.predictedWinningToPar)}</td>
             <td>${row.tiebreakDiff ?? "-"}</td>
           `;
@@ -652,6 +692,7 @@
         }
         renderEventFeed(feed);
         window.__courseCard = data.courseCard || {};
+        renderSideGamePoll(data.sideGamePoll || null);
         latestParticipants = data.participantDetails || [];
         populateFocusOptions(latestParticipants);
         const nextParticipantsSignature = JSON.stringify(
@@ -883,7 +924,7 @@
           }
           for (const row of topRows) {
             const li = document.createElement("li");
-            li.textContent = `${row.name} - $${row.amount}`;
+            li.textContent = `${row.name}`;
             root.appendChild(li);
           }
         };
@@ -891,6 +932,104 @@
         mount("side-aces", sideGames.aces || []);
         mount("side-streaks", sideGames.streaks || []);
         mount("side-daily-winners", sideGames.dailyWinners || []);
+      }
+
+      function currentPollVoter() {
+        const voterSelect = document.getElementById("poll-voter");
+        return voterSelect ? String(voterSelect.value || "").trim() : "";
+      }
+
+      function renderSideGamePoll(poll) {
+        latestSideGamePoll = poll || null;
+        const pollData = poll || { threshold: 5, summaries: {} };
+        const summaries = pollData.summaries || {};
+        const selectedVoter = currentPollVoter();
+        for (const [gameKey, label] of Object.entries(SIDEGAME_POLL_GAMES)) {
+          const cell = document.getElementById(`poll-cell-${gameKey}`);
+          if (!cell) continue;
+          const summary = summaries[gameKey] || {
+            keepCount: 0,
+            removeCount: 0,
+            threshold: pollData.threshold || 5,
+            totalVotes: 0,
+            decidedOption: null,
+            voters: [],
+          };
+          const voters = Array.isArray(summary.voters) ? summary.voters : [];
+          const voterRecord = selectedVoter ? voters.find((item) => item.name === selectedVoter) : null;
+          const disabledKeep = !selectedVoter || Boolean(voterRecord);
+          const disabledRemove = !selectedVoter || Boolean(voterRecord);
+          const votedText = voters.length
+            ? voters.map((item) => `${item.name} ${item.vote === "keep" ? "✅" : "❌"}`).join(", ")
+            : "No votes yet";
+          const majorityText = summary.decidedOption
+            ? `Majority: ${summary.decidedOption === "keep" ? "KEEP ✅" : "REMOVE ❌"}`
+            : `Majority pending (${summary.threshold || 5}+ votes)`;
+          const selfVoteText = voterRecord
+            ? `Your vote: ${voterRecord.vote === "keep" ? "KEEP ✅" : "REMOVE ❌"}`
+            : (selectedVoter ? "You have not voted" : "Select a voter to cast a vote");
+
+          cell.innerHTML = `
+            <div class="poll-vote-title">${label}</div>
+            <div class="poll-vote-buttons">
+              <button type="button" class="poll-vote-btn keep" data-game="${gameKey}" data-vote="keep" ${disabledKeep ? "disabled" : ""}>✅</button>
+              <button type="button" class="poll-vote-btn remove" data-game="${gameKey}" data-vote="remove" ${disabledRemove ? "disabled" : ""}>❌</button>
+            </div>
+            <div class="poll-vote-meta">✅ ${summary.keepCount || 0} · ❌ ${summary.removeCount || 0}</div>
+            <div class="poll-vote-meta">${majorityText}</div>
+            <div class="poll-vote-meta">${selfVoteText}</div>
+            <div class="poll-vote-voters">${votedText}</div>
+          `;
+        }
+
+        const startDaySummary = summaries[START_DAY_POLICY_KEY] || {
+          day1Count: 0,
+          day2Count: 0,
+          threshold: pollData.threshold || 5,
+          decidedOption: null,
+          voters: [],
+        };
+        const startDayVoters = Array.isArray(startDaySummary.voters) ? startDaySummary.voters : [];
+        const startDayRecord = selectedVoter ? startDayVoters.find((item) => item.name === selectedVoter) : null;
+        const dayButtons = Array.from(document.querySelectorAll('.poll-start-day-buttons .poll-vote-btn'));
+        dayButtons.forEach((button) => {
+          button.disabled = !selectedVoter || Boolean(startDayRecord);
+        });
+        const startDayMeta = document.getElementById("poll-start-day-meta");
+        const startDayVotersEl = document.getElementById("poll-start-day-voters");
+        if (startDayMeta) {
+          const majorityText = startDaySummary.decidedOption
+            ? `Majority: ${startDaySummary.decidedOption === "day1" ? "Day 1" : "Day 2"}`
+            : `Majority pending (${startDaySummary.threshold || 5}+ votes)`;
+          const selfText = startDayRecord
+            ? `Your vote: ${startDayRecord.vote === "day1" ? "Day 1" : "Day 2"}`
+            : (selectedVoter ? "You have not voted" : "Select your name to vote.");
+          startDayMeta.textContent = `Day 1: ${startDaySummary.day1Count || 0} · Day 2: ${startDaySummary.day2Count || 0} · ${majorityText} · ${selfText}`;
+        }
+        if (startDayVotersEl) {
+          startDayVotersEl.textContent = startDayVoters.length
+            ? startDayVoters.map((item) => `${item.name} ${item.vote === "day1" ? "Day 1" : "Day 2"}`).join(", ")
+            : "No votes yet.";
+        }
+      }
+
+      async function submitSideGameVote(game, vote) {
+        const voter = currentPollVoter();
+        if (!voter) {
+          alert("Select your participant name before voting.");
+          return;
+        }
+        const response = await fetch("/api/sidegame-poll/vote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ voter, game, vote }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+          alert(payload.error || "Could not submit vote.");
+          return;
+        }
+        renderState(payload.state || {});
       }
 
       async function refreshState() {
@@ -908,6 +1047,35 @@
       });
       document.getElementById("participant-focus").addEventListener("change", () => {
         renderParticipantDetails(latestParticipants);
+      });
+      const pollVoterSelect = document.getElementById("poll-voter");
+      if (pollVoterSelect) {
+        const rememberedVoter = window.localStorage.getItem("masters-pool-poll-voter") || "";
+        if (rememberedVoter && Array.from(pollVoterSelect.options).some((opt) => opt.value === rememberedVoter)) {
+          pollVoterSelect.value = rememberedVoter;
+        }
+        const identityState = document.getElementById("poll-identity-state");
+        const syncIdentityState = () => {
+          const voter = pollVoterSelect.value || "";
+          if (identityState) {
+            identityState.textContent = voter ? `Voting as: ${voter}` : "No voter selected";
+          }
+        };
+        syncIdentityState();
+        pollVoterSelect.addEventListener("change", () => {
+          window.localStorage.setItem("masters-pool-poll-voter", pollVoterSelect.value || "");
+          syncIdentityState();
+          renderSideGamePoll(latestSideGamePoll);
+        });
+      }
+      document.addEventListener("click", async (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (!target.classList.contains("poll-vote-btn")) return;
+        const game = target.dataset.game || "";
+        const vote = target.dataset.vote || "";
+        if (!game || !vote) return;
+        await submitSideGameVote(game, vote);
       });
       document.getElementById("download-standings").addEventListener("click", async () => {
         const table = document.getElementById("standings");
