@@ -155,7 +155,7 @@
             <button type="button" class="poll-vote-btn day" data-game="startDayPolicy" data-vote="day1" disabled>Day 1</button>
             <button type="button" class="poll-vote-btn day" data-game="startDayPolicy" data-vote="day2" disabled>Day 2</button>
           </div>
-          <div id="poll-start-day-meta" class="poll-vote-meta">Select your name to vote.</div>
+          <div id="poll-start-day-meta" class="poll-vote-meta">Majority Votes 5+</div>
           <div id="poll-start-day-voters" class="poll-vote-voters">No votes yet.</div>
         </div>
         <table id="standings">
@@ -228,13 +228,13 @@
         </table>
       </section>
 
-      <section class="sidegames" hidden>
+      <section class="sidegames">
         <h2>Side Game Leaders</h2>
         <div class="sidegames-grid">
           <article class="sidegame-card">
             <h3>Eagles ($10)</h3>
             <p class="sidegame-rule">Rule: each eagle by any golfer on your roster counts as one eagle event for this side game.</p>
-            <ol id="side-eagles">
+            <ol id="side-eagles" hidden>
               {% for row in state.get("sideGameLeaders", {}).get("eagles", [])[:3] %}
               <li>{{ row.name }}</li>
               {% endfor %}
@@ -243,7 +243,7 @@
           <article class="sidegame-card">
             <h3>Aces ($20)</h3>
             <p class="sidegame-rule">Rule: each hole-in-one (ace) by any golfer on your roster counts as one ace event.</p>
-            <ol id="side-aces">
+            <ol id="side-aces" hidden>
               {% for row in state.get("sideGameLeaders", {}).get("aces", [])[:3] %}
               <li>{{ row.name }}</li>
               {% endfor %}
@@ -252,7 +252,7 @@
           <article class="sidegame-card">
             <h3>Birdie Streaks ($10)</h3>
             <p class="sidegame-rule">Rule: a streak starts at 3 straight birdie-or-better holes, then extends with +1 event for each additional consecutive qualifying hole.</p>
-            <ol id="side-streaks">
+            <ol id="side-streaks" hidden>
               {% for row in state.get("sideGameLeaders", {}).get("streaks", [])[:3] %}
               <li>{{ row.name }}</li>
               {% endfor %}
@@ -261,7 +261,7 @@
           <article class="sidegame-card">
             <h3>Daily Winners ($10/day)</h3>
             <p class="sidegame-rule">Rule: each day (Thu/Fri/Sat/Sun), the single lowest team score wins that day’s event. Future days do not count until they begin.</p>
-            <ol id="side-daily-winners">
+            <ol id="side-daily-winners" hidden>
               {% for row in state.get("sideGameLeaders", {}).get("dailyWinners", [])[:3] %}
               <li>{{ row.name }}</li>
               {% endfor %}
@@ -962,12 +962,10 @@
           const votedText = voters.length
             ? voters.map((item) => `${item.name} ${item.vote === "keep" ? "✅" : "❌"}`).join(", ")
             : "No votes yet";
-          const majorityText = summary.decidedOption
-            ? `Majority: ${summary.decidedOption === "keep" ? "KEEP ✅" : "REMOVE ❌"}`
-            : `Majority pending (${summary.threshold || 5}+ votes)`;
+          const majorityText = "Majority Votes 5+";
           const selfVoteText = voterRecord
             ? `Your vote: ${voterRecord.vote === "keep" ? "KEEP ✅" : "REMOVE ❌"}`
-            : (selectedVoter ? "You have not voted" : "Select a voter to cast a vote");
+            : "You have not voted";
 
           cell.innerHTML = `
             <div class="poll-vote-title">${label}</div>
@@ -998,12 +996,10 @@
         const startDayMeta = document.getElementById("poll-start-day-meta");
         const startDayVotersEl = document.getElementById("poll-start-day-voters");
         if (startDayMeta) {
-          const majorityText = startDaySummary.decidedOption
-            ? `Majority: ${startDaySummary.decidedOption === "day1" ? "Day 1" : "Day 2"}`
-            : `Majority pending (${startDaySummary.threshold || 5}+ votes)`;
+          const majorityText = "Majority Votes 5+";
           const selfText = startDayRecord
             ? `Your vote: ${startDayRecord.vote === "day1" ? "Day 1" : "Day 2"}`
-            : (selectedVoter ? "You have not voted" : "Select your name to vote.");
+            : "You have not voted";
           startDayMeta.textContent = `Day 1: ${startDaySummary.day1Count || 0} · Day 2: ${startDaySummary.day2Count || 0} · ${majorityText} · ${selfText}`;
         }
         if (startDayVotersEl) {
