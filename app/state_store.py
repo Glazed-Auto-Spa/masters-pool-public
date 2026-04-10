@@ -13,7 +13,7 @@ from psycopg.rows import dict_row
 from app.storage import acquire_file_lock, ensure_runtime_paths, read_state, write_ledger_entry, write_state
 
 DATABASE_URL_ENV = "MASTERS_POOL_DATABASE_URL"
-STATE_SCHEMA_VERSION = 2
+STATE_SCHEMA_VERSION = 3
 POLL_LOCK_KEY = 934_221_001
 LOOP_LOCK_KEY = 934_221_002
 
