@@ -152,10 +152,10 @@
               <th>Sun</th>
               <th>Total</th>
               <th>Main Event Payout</th>
-              <th>Eagles ($10)</th>
-              <th>Aces ($20)</th>
-              <th>Streaks ($10)</th>
-              <th>Daily Wins ($10)</th>
+              <th>Eagles ($50)</th>
+              <th>Aces ($100)</th>
+              <th>Streaks ($50)</th>
+              <th>Daily Wins ($50)</th>
               <th title="Side Bet Net = For-everyone side-game settlement. Net_i = (N * S_i - sum(S)) / (N - 1), where S_i includes Eagles + Aces + Streaks + Daily Winners.">Side Bet Net</th>
               <th>Tiebreak Pick</th>
               <th>Tiebreak Diff</th>
@@ -204,7 +204,7 @@
         <h2>Side Game Leaders</h2>
         <div class="sidegames-grid">
           <article class="sidegame-card">
-            <h3>Eagles ($10)</h3>
+            <h3>Eagles ($50)</h3>
             <ol id="side-eagles">
               {% for row in state.get("sideGameLeaders", {}).get("eagles", [])[:3] %}
               <li>{{ row.name }} - ${{ row.amount }}</li>
@@ -212,7 +212,7 @@
             </ol>
           </article>
           <article class="sidegame-card">
-            <h3>Aces ($20)</h3>
+            <h3>Aces ($100)</h3>
             <ol id="side-aces">
               {% for row in state.get("sideGameLeaders", {}).get("aces", [])[:3] %}
               <li>{{ row.name }} - ${{ row.amount }}</li>
@@ -220,7 +220,7 @@
             </ol>
           </article>
           <article class="sidegame-card">
-            <h3>Birdie Streaks ($10)</h3>
+            <h3>Birdie Streaks ($50)</h3>
             <ol id="side-streaks">
               {% for row in state.get("sideGameLeaders", {}).get("streaks", [])[:3] %}
               <li>{{ row.name }} - ${{ row.amount }}</li>
@@ -228,7 +228,7 @@
             </ol>
           </article>
           <article class="sidegame-card">
-            <h3>Daily Winners ($10/day)</h3>
+            <h3>Daily Winners ($50/day)</h3>
             <ol id="side-daily-winners">
               {% for row in state.get("sideGameLeaders", {}).get("dailyWinners", [])[:3] %}
               <li>{{ row.name }} - ${{ row.amount }}</li>
@@ -334,13 +334,13 @@
           <article class="rules-card">
             <h3>Side Games</h3>
             <ul>
-              <li>Eagles: +$10 for each eagle by any player on your roster.</li>
-              <li>Aces: +$20 for each ace (hole-in-one) on your roster.</li>
+              <li>Eagles: +$50 for each eagle by any player on your roster.</li>
+              <li>Aces: +$100 for each ace (hole-in-one) on your roster.</li>
               <li>
-                Birdie streaks: starts at 3 straight birdie-or-better holes for +$10, then +$10 for each additional consecutive
+                Birdie streaks: starts at 3 straight birdie-or-better holes for +$50, then +$50 for each additional consecutive
                 birdie-or-better hole.
               </li>
-              <li>Daily winner: +$10 each day (Thu/Fri/Sat/Sun) to the single lowest team score that day.</li>
+              <li>Daily winner: +$50 each day (Thu/Fri/Sat/Sun) to the single lowest team score that day.</li>
               <li>Streak qualifying holes: birdie, eagle, ace. Any other result ends the streak.</li>
             </ul>
           </article>

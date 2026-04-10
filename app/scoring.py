@@ -9,6 +9,11 @@ from app.models import HoleResult, PlayerSnapshot
 QUALIFYING_STREAK_TYPES = {"BIRDIE", "EAGLE", "ACE"}
 DAY_TO_ROUND = {1: 1, 2: 2, 3: 3, 4: 4}
 MAIN_EVENT_BUY_IN = 25
+SIDE_BET_MULTIPLIER = 5
+EAGLE_BONUS_DOLLARS = 10 * SIDE_BET_MULTIPLIER
+ACE_BONUS_DOLLARS = 20 * SIDE_BET_MULTIPLIER
+STREAK_BONUS_DOLLARS = 10 * SIDE_BET_MULTIPLIER
+DAILY_WINNER_BONUS_DOLLARS = 10 * SIDE_BET_MULTIPLIER
 MASTERS_PARS = [4, 5, 4, 3, 4, 3, 4, 5, 4, 4, 4, 3, 5, 4, 5, 3, 4, 4]
 MASTERS_YARDS = [445, 585, 350, 177, 495, 192, 450, 570, 460, 495, 520, 150, 545, 440, 550, 165, 450, 465]
 MASTERS_HANDICAP = [9, 1, 13, 15, 5, 17, 11, 3, 7, 6, 8, 16, 4, 12, 2, 18, 14, 10]
@@ -125,8 +130,8 @@ def score_participants(
             player = snapshots.get(player_id)
             if player is None:
                 continue
-            eagle_total += _count_score_types(player, {"EAGLE"}) * 10
-            ace_total += _count_score_types(player, {"ACE"}) * 20
+            eagle_total += _count_score_types(player, {"EAGLE"}) * EAGLE_BONUS_DOLLARS
+            ace_total += _count_score_types(player, {"ACE"}) * ACE_BONUS_DOLLARS
             streak_total += _streak_bonus(player)
 
         event_score = sum(daily_scores.values())
@@ -343,7 +348,7 @@ def _streak_bonus(player: PlayerSnapshot) -> int:
             if hole.score_type in QUALIFYING_STREAK_TYPES:
                 streak += 1
                 if streak >= 3:
-                    payout += 10
+                    payout += STREAK_BONUS_DOLLARS
             else:
                 streak = 0
     return payout
@@ -393,7 +398,7 @@ def _apply_daily_winner_bonuses(results: list[ParticipantResult], active_days: s
         contenders = [result for result in results if result.daily_scores.get(day, 0) == low_score]
         # Exactly one daily winner: deterministic tie-break by existing leaderboard key.
         winner = sorted(contenders, key=_result_rank_key)[0]
-        winner.daily_winner_bonus += 10
+        winner.daily_winner_bonus += DAILY_WINNER_BONUS_DOLLARS
         winner.daily_winner_days.append(day)
 
 

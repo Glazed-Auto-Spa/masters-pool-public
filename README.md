@@ -16,15 +16,15 @@ Standalone Masters pool scorer with:
 - event total is sum of Thu/Fri/Sat/Sun team scores
 - lowest event total wins
 - missed cut or WD = golfer's cumulative score-to-date is reused for each unplayed day
-- eagle bonus = **$10 each**
-- ace bonus = **$20 each**
+- eagle bonus = **$50 each**
+- ace bonus = **$100 each**
 - birdie streak bonus:
   - qualifying hole = birdie/eagle/ace
   - starts at 3 consecutive qualifying holes
-  - $10 at 3rd, +$10 each additional consecutive hole
+  - $50 at 3rd, +$50 each additional consecutive hole
   - resets on any non-qualifying hole
 - daily winner bonus:
-  - each day (Thu/Fri/Sat/Sun), the single lowest team score gets +$10
+  - each day (Thu/Fri/Sat/Sun), the single lowest team score gets +$50
   - deterministic tie break uses current leaderboard ordering rules
 - tiebreaker = closest prediction to winner's final score to par
 

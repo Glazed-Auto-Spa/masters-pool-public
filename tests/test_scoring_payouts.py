@@ -83,7 +83,7 @@ class TestScoringPayouts(unittest.TestCase):
         leaderboard = scored["leaderboard"]
 
         self.assertEqual(leaderboard[0]["name"], "A")
-        self.assertEqual(leaderboard[0]["dailyWinnerBonusDollars"], 40)
+        self.assertEqual(leaderboard[0]["dailyWinnerBonusDollars"], 200)
         self.assertEqual(leaderboard[0]["dailyWinnerDays"], [1, 2, 3, 4])
         self.assertEqual(leaderboard[1]["dailyWinnerBonusDollars"], 0)
         self.assertEqual(leaderboard[1]["dailyWinnerDays"], [])
@@ -140,7 +140,7 @@ class TestScoringPayouts(unittest.TestCase):
         leaderboard = scored["leaderboard"]
 
         self.assertEqual(leaderboard[0]["name"], "A")
-        self.assertEqual(leaderboard[0]["dailyWinnerBonusDollars"], 10)
+        self.assertEqual(leaderboard[0]["dailyWinnerBonusDollars"], 50)
         self.assertEqual(leaderboard[0]["dailyWinnerDays"], [1])
 
     def test_holes_remaining_rolls_up_by_participant_for_active_round(self) -> None:
