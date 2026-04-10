@@ -81,6 +81,12 @@
         </div>
       </section>
 
+      <section class="round-context" id="round-context">
+        <span class="context-pill" id="context-round">Round 1</span>
+        <span class="context-pill" id="context-active">0 active golfers</span>
+        <span class="context-pill" id="context-updated">Updated --</span>
+      </section>
+
       <section class="event-feed">
         <h2>Live Event Feed</h2>
         <ul id="event-feed-list" class="event-feed-list"></ul>
@@ -118,7 +124,21 @@
       </section>
 
       <section>
-        <h2>Live Standings</h2>
+        <div class="standings-header">
+          <h2>Live Standings</h2>
+          <div class="standings-controls">
+            <label for="standings-sort">Sort</label>
+            <select id="standings-sort">
+              <option value="rank">Rank</option>
+              <option value="total">Total (low to high)</option>
+              <option value="holesLeft">Holes Left (fewest first)</option>
+              <option value="sideNet">Side Bet Net (high to low)</option>
+              <option value="dailyWins">Daily Wins (high to low)</option>
+            </select>
+            <button id="download-standings" type="button">Download PNG</button>
+            <button id="share-standings" type="button">Share</button>
+          </div>
+        </div>
         <table id="standings">
           <thead>
             <tr>
@@ -136,7 +156,7 @@
               <th>Aces ($20)</th>
               <th>Streaks ($10)</th>
               <th>Daily Wins ($10)</th>
-              <th>Side Bet Net</th>
+              <th title="Side Bet Net = For-everyone side-game settlement. Net_i = (N * S_i - sum(S)) / (N - 1), where S_i includes Eagles + Aces + Streaks + Daily Winners.">Side Bet Net</th>
               <th>Tiebreak Pick</th>
               <th>Tiebreak Diff</th>
             </tr>
@@ -282,7 +302,8 @@
                         + pick.dayScores.get("4", pick.dayScores.get(4, 0))) }}
                     </strong>
                   </td>
-                  <td>{{ pick.status if pick.status else (pick.get("throughDisplay", "LIVE") if pick.get("throughDisplay", "-") != "-" else "LIVE") }}</td>
+                  {% set status_text = pick.status if pick.status else (pick.get("throughDisplay", "LIVE") if pick.get("throughDisplay", "-") != "-" else "LIVE") %}
+                  <td class="status-cell status-{{ status_text|lower|replace(' ', '-') }}">{{ status_text }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -347,6 +368,10 @@
       let feedLimit = 10;
       let feedSignature = "";
       let latestFeed = [];
+      let latestLeaderboard = [];
+      let latestParticipants = [];
+      let standingsSignature = "";
+      let participantsSignature = "";
       const phxFormatter = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Phoenix",
         year: "numeric",
@@ -410,13 +435,20 @@
 
       function renderStandings(rows) {
         const body = document.getElementById("standings-body");
+        const mode = (document.getElementById("standings-sort") || {}).value || "rank";
+        const sortedRows = sortRows(rows, mode);
         body.innerHTML = "";
-        for (const row of rows || []) {
+        if (!sortedRows.length) {
+          body.innerHTML = `<tr><td colspan="17" class="table-empty">No standings yet. Waiting for live data.</td></tr>`;
+          return;
+        }
+        for (const row of sortedRows) {
           const tr = document.createElement("tr");
           const moved = Boolean(row.movedThisCycle);
           const prev = row.previousRank ?? prevRanks[row.name];
           const dayWins = new Set((row.dailyWinnerDays || []).map((v) => Number(v)));
           const dayClass = (day) => (dayWins.has(day) ? "daily-winner-cell" : "");
+          const statusBreakdown = `Eagles: $${row.eagleBonusDollars || 0} | Aces: $${row.aceBonusDollars || 0} | Streaks: $${row.birdieStreakBonusDollars || 0} | Daily: $${row.dailyWinnerBonusDollars || 0}`;
           tr.className = moved ? (row.rank < prev ? "rank-up-row" : "rank-down-row") : "";
           tr.innerHTML = `
             <td>${row.rank}</td>
@@ -433,7 +465,7 @@
             <td>$${row.aceBonusDollars}</td>
             <td>$${row.birdieStreakBonusDollars}</td>
             <td>$${row.dailyWinnerBonusDollars ?? 0}</td>
-            <td><strong>${row.netPayoutDollars === null || row.netPayoutDollars === undefined ? "--" : `$${formatCurrency(row.netPayoutDollars)}`}</strong></td>
+            <td title="${statusBreakdown}"><strong>${row.netPayoutDollars === null || row.netPayoutDollars === undefined ? "--" : `$${formatCurrency(row.netPayoutDollars)}`}</strong></td>
             <td>${formatToPar(row.predictedWinningToPar)}</td>
             <td>${row.tiebreakDiff ?? "-"}</td>
           `;
@@ -469,11 +501,15 @@
           feedLimit = 10;
         }
         root.innerHTML = "";
-        for (const entry of normalizedFeed.slice(0, feedLimit)) {
-          const li = document.createElement("li");
-          li.className = `event-item ${entry.type || "info"}`;
-          li.innerHTML = `<span class="event-time">${formatPhoenixTime(entry.time)}</span><span class="event-msg">${entry.message || ""}</span>`;
-          root.appendChild(li);
+        if (!normalizedFeed.length) {
+          root.innerHTML = `<li class="event-item calm"><span class="event-time">--</span><span class="event-msg">No movement yet for this cycle.</span></li>`;
+        } else {
+          for (const entry of normalizedFeed.slice(0, feedLimit)) {
+            const li = document.createElement("li");
+            li.className = `event-item ${entry.type || "info"}`;
+            li.innerHTML = `<span class="event-time">${formatPhoenixTime(entry.time)}</span><span class="event-msg">${entry.message || ""}</span>`;
+            root.appendChild(li);
+          }
         }
 
         if (moreBtn) {
@@ -488,6 +524,66 @@
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return String(value);
         return `${phxFormatter.format(date)} MST`;
+      }
+
+      function statusClass(rawStatus) {
+        const status = String(rawStatus || "").trim().toUpperCase();
+        if (!status) return "status-live";
+        if (status === "MC" || status.includes("MISSED CUT")) return "status-mc";
+        if (status === "WD" || status.includes("WITHDRAW")) return "status-wd";
+        if (status === "DQ" || status.includes("DISQUAL")) return "status-dq";
+        if (status === "F") return "status-final";
+        if (status.startsWith("THRU")) return "status-live";
+        return "status-live";
+      }
+
+      function deriveActiveRoundFromPicks(picks) {
+        let activeDay = 1;
+        for (let day = 1; day <= 4; day += 1) {
+          const hasLiveHoleData = (picks || []).some((pick) => {
+            const round = (pick.roundScorecards || {})[String(day)] || (pick.roundScorecards || {})[day] || { holes: [] };
+            const holes = Array.isArray(round.holes) ? round.holes : [];
+            return holes.some((value) => Number(value) > 0);
+          });
+          if (hasLiveHoleData) activeDay = day;
+        }
+        return activeDay;
+      }
+
+      function renderRoundContext(data) {
+        const participants = data.participantDetails || [];
+        const picks = participants.flatMap((p) => Array.isArray(p.picks) ? p.picks : []);
+        const activeRound = deriveActiveRoundFromPicks(picks);
+        const activeGolfers = picks.filter((pick) => {
+          const through = String(pick.throughDisplay || "-").toUpperCase();
+          const status = String(pick.status || "").toUpperCase();
+          if (through === "-" || through === "F" || through === "MC" || through === "WD") return false;
+          if (status.includes("MISSED CUT") || status.includes("WITHDRAW")) return false;
+          return true;
+        }).length;
+        const roundEl = document.getElementById("context-round");
+        const activeEl = document.getElementById("context-active");
+        const updatedAtEl = document.getElementById("context-updated");
+        if (roundEl) roundEl.textContent = `Round ${activeRound}`;
+        if (activeEl) activeEl.textContent = `${activeGolfers} active golfers`;
+        if (updatedAtEl) updatedAtEl.textContent = `Updated ${data.updatedAt ? formatPhoenixTime(data.updatedAt) : "--"}`;
+      }
+
+      function sortRows(rows, mode) {
+        const data = [...(rows || [])];
+        const byRank = (a, b) => Number(a.rank || 9999) - Number(b.rank || 9999);
+        if (mode === "total") {
+          data.sort((a, b) => (Number(a.eventScore || 0) - Number(b.eventScore || 0)) || byRank(a, b));
+        } else if (mode === "holesLeft") {
+          data.sort((a, b) => (Number(a.holesRemaining || 0) - Number(b.holesRemaining || 0)) || byRank(a, b));
+        } else if (mode === "sideNet") {
+          data.sort((a, b) => (Number(b.netPayoutDollars || 0) - Number(a.netPayoutDollars || 0)) || byRank(a, b));
+        } else if (mode === "dailyWins") {
+          data.sort((a, b) => (Number(b.dailyWinnerBonusDollars || 0) - Number(a.dailyWinnerBonusDollars || 0)) || byRank(a, b));
+        } else {
+          data.sort(byRank);
+        }
+        return data;
       }
 
       function populateFocusOptions(participants) {
@@ -539,7 +635,15 @@
           errorsEl.textContent = "";
         }
 
-        renderStandings(data.leaderboard || []);
+        renderRoundContext(data);
+        const nextStandingsSignature = JSON.stringify((data.leaderboard || []).map((row) => [
+          row.rank, row.name, row.eventScore, row.holesRemaining, row.netPayoutDollars, row.dailyWinnerBonusDollars,
+        ]));
+        latestLeaderboard = data.leaderboard || [];
+        if (nextStandingsSignature !== standingsSignature) {
+          standingsSignature = nextStandingsSignature;
+          renderStandings(latestLeaderboard);
+        }
         const feed = data.eventFeed || [];
         if (feed.length > 0) {
           document.getElementById("change-ticker").textContent = feed[0].message || "Live updates active.";
@@ -548,8 +652,15 @@
         }
         renderEventFeed(feed);
         window.__courseCard = data.courseCard || {};
-        populateFocusOptions(data.participantDetails || []);
-        renderParticipantDetails(data.participantDetails || []);
+        latestParticipants = data.participantDetails || [];
+        populateFocusOptions(latestParticipants);
+        const nextParticipantsSignature = JSON.stringify(
+          latestParticipants.map((p) => [p.name, p.eventScore, (p.picks || []).map((k) => [k.playerName, k.status, k.throughDisplay, k.dayScores])]),
+        );
+        if (nextParticipantsSignature !== participantsSignature) {
+          participantsSignature = nextParticipantsSignature;
+          renderParticipantDetails(latestParticipants);
+        }
         renderSideGames(data.sideGameLeaders || {});
         prevRanks = Object.fromEntries((data.leaderboard || []).map((row) => [row.name, row.rank]));
       }
@@ -624,7 +735,7 @@
                 <td>${formatToPar(getDailyScore(scores, 4))}</td>
                 <td>${fieldPos} (${scoreToParText})</td>
                 <td><strong>${formatToPar(total)}</strong></td>
-                <td>${statusText}</td>
+                <td class="status-cell ${statusClass(statusText)}">${statusText}</td>
               </tr>
             `;
           }).join("");
@@ -762,7 +873,15 @@
         const mount = (id, rows) => {
           const root = document.getElementById(id);
           root.innerHTML = "";
-          for (const row of (rows || []).slice(0, 3)) {
+          const topRows = (rows || []).slice(0, 3);
+          if (!topRows.length) {
+            const li = document.createElement("li");
+            li.className = "empty-note";
+            li.textContent = "No qualifying events yet.";
+            root.appendChild(li);
+            return;
+          }
+          for (const row of topRows) {
             const li = document.createElement("li");
             li.textContent = `${row.name} - $${row.amount}`;
             root.appendChild(li);
@@ -784,10 +903,74 @@
         feedLimit += 10;
         renderEventFeed(latestFeed);
       });
-      document.getElementById("participant-focus").addEventListener("change", async () => {
-        const res = await fetch("/api/state");
-        const data = await res.json();
-        renderParticipantDetails(data.participantDetails || []);
+      document.getElementById("standings-sort").addEventListener("change", () => {
+        renderStandings(latestLeaderboard);
+      });
+      document.getElementById("participant-focus").addEventListener("change", () => {
+        renderParticipantDetails(latestParticipants);
+      });
+      document.getElementById("download-standings").addEventListener("click", async () => {
+        const table = document.getElementById("standings");
+        if (!table) return;
+        try {
+          const rect = table.getBoundingClientRect();
+          const cssText = await fetch("/static/style.css").then((r) => r.text());
+          const cloned = table.cloneNode(true);
+          const content = `
+            <div xmlns="http://www.w3.org/1999/xhtml" style="padding:16px;background:#f4f7f8;">
+              <h3 style="margin:0 0 10px 0;font:600 16px Inter,Arial,sans-serif;color:#153646;">Masters Pool Standings</h3>
+              ${new XMLSerializer().serializeToString(cloned)}
+            </div>
+          `;
+          const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="${Math.ceil(rect.width) + 32}" height="${Math.ceil(rect.height) + 80}">
+              <foreignObject width="100%" height="100%">
+                <style>${cssText}</style>
+                ${content}
+              </foreignObject>
+            </svg>
+          `;
+          const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              const png = canvas.toDataURL("image/png");
+              const a = document.createElement("a");
+              a.href = png;
+              a.download = "masters-pool-standings.png";
+              a.click();
+            }
+            URL.revokeObjectURL(url);
+          };
+          img.src = url;
+        } catch {
+          alert("Could not generate PNG snapshot from this browser. Try Share or screenshot.");
+        }
+      });
+      document.getElementById("share-standings").addEventListener("click", async () => {
+        const rows = Array.from(document.querySelectorAll("#standings-body tr")).slice(0, 5);
+        const lines = rows.map((tr) => {
+          const tds = Array.from(tr.querySelectorAll("td"));
+          if (tds.length < 9) return null;
+          return `${tds[0].textContent?.trim()}. ${tds[3].textContent?.trim()} ${tds[8].textContent?.trim()}`;
+        }).filter(Boolean);
+        const text = `Masters Pool Standings\n${lines.join("\n")}\nhttps://masters-pool-public.vercel.app`;
+        try {
+          if (navigator.share) {
+            await navigator.share({ title: "Masters Pool Standings", text, url: "https://masters-pool-public.vercel.app" });
+          } else {
+            await navigator.clipboard.writeText(text);
+            alert("Standings summary copied to clipboard.");
+          }
+        } catch {
+          // User cancelled share.
+        }
       });
       refreshState();
       resetRefreshCountdown();
