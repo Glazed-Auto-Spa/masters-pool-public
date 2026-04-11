@@ -416,7 +416,12 @@
                     {% endif %}
                   {% endif %}
                   {% set tee = pick.get("teeTimePhoenix") %}
-                  {% set status_text = disp ~ (" · " ~ tee if tee and disp == "Live" else "") %}
+                  {% set pavg = pick.get("penaltyWeekendAvgToPar") %}
+                  {% if pavg is not none and u in ["MC", "WD", "DQ"] %}
+                    {% set status_text = disp ~ " " ~ to_par(pavg) ~ " AVG" %}
+                  {% else %}
+                    {% set status_text = disp ~ (" · " ~ tee if tee and disp == "Live" else "") %}
+                  {% endif %}
                   {% set u = disp|string|trim|upper %}
                   {% if u == "MC" %}
                     {% set status_class = "status-mc" %}
@@ -512,9 +517,15 @@
         const sd0 = String(pick.statusDisplay || "").trim().toUpperCase();
         const chipMod =
           sd0 === "MC" || sd0 === "WD" || sd0 === "DQ" ? "penalty" : sd0 === "LIVE" || sd0 === "" ? "live" : "neutral";
-        return pick.statusDisplay
-          ? `<span class="pick-status-chip pick-status-chip--${chipMod}">${pick.statusDisplay}</span>`
-          : "";
+        if (!pick.statusDisplay) return "";
+        const avg = pick.penaltyWeekendAvgToPar;
+        const hasAvg =
+          (sd0 === "MC" || sd0 === "WD" || sd0 === "DQ") &&
+          avg !== null &&
+          avg !== undefined &&
+          !Number.isNaN(Number(avg));
+        const label = hasAvg ? `${pick.statusDisplay} ${formatToPar(Number(avg))} AVG` : pick.statusDisplay;
+        return `<span class="pick-status-chip pick-status-chip--${chipMod}">${label}</span>`;
       }
 
       function buildDesktopPickScorecardArticleHtml(pick, dayKey, courseCard) {
@@ -786,14 +797,15 @@
       }
 
       function statusClass(rawStatus) {
-        const status = String(rawStatus || "").trim().toUpperCase();
-        if (!status) return "status-live";
-        const u = status.trim().toUpperCase();
-        if (u === "CUT" || u === "MC" || status.includes("MISSED CUT")) return "status-mc";
-        if (u === "WD" || status.includes("WITHDRAW")) return "status-wd";
-        if (u === "DQ" || status.includes("DISQUAL")) return "status-dq";
-        if (status === "F") return "status-final";
-        if (status.startsWith("THRU")) return "status-live";
+        const full = String(rawStatus || "").trim();
+        const first = (full.split(/\s+/)[0] || "").toUpperCase();
+        const u = full.toUpperCase();
+        if (!first) return "status-live";
+        if (first === "CUT" || first === "MC" || u.includes("MISSED CUT")) return "status-mc";
+        if (first === "WD" || u.includes("WITHDRAW")) return "status-wd";
+        if (first === "DQ" || u.includes("DISQUAL")) return "status-dq";
+        if (first === "F") return "status-final";
+        if (first.startsWith("THRU")) return "status-live";
         return "status-live";
       }
 
@@ -948,7 +960,7 @@
         latestParticipants = data.participantDetails || [];
         populateFocusOptions(latestParticipants);
         const nextParticipantsSignature = JSON.stringify(
-          latestParticipants.map((p) => [p.name, p.eventScore, (p.picks || []).map((k) => [k.playerName, k.status, k.statusDisplay, k.throughDisplay, k.teeTimePhoenix, k.dayScores])]),
+          latestParticipants.map((p) => [p.name, p.eventScore, (p.picks || []).map((k) => [k.playerName, k.status, k.statusDisplay, k.penaltyWeekendAvgToPar, k.throughDisplay, k.teeTimePhoenix, k.dayScores])]),
         );
         if (nextParticipantsSignature !== participantsSignature) {
           participantsSignature = nextParticipantsSignature;
@@ -993,6 +1005,17 @@
                 : (throughText !== "-" ? throughText : "Live");
             if (pick.teeTimePhoenix && statusText === "Live") {
               statusText = `${statusText} · ${pick.teeTimePhoenix}`;
+            } else {
+              const sdU = String(pick.statusDisplay || "").trim().toUpperCase();
+              const pavg = pick.penaltyWeekendAvgToPar;
+              if (
+                (sdU === "MC" || sdU === "WD" || sdU === "DQ") &&
+                pavg !== null &&
+                pavg !== undefined &&
+                !Number.isNaN(Number(pavg))
+              ) {
+                statusText = `${statusText} ${formatToPar(Number(pavg))} AVG`;
+              }
             }
             return `
               <tr>
@@ -1003,7 +1026,7 @@
                 <td>${formatToPar(getDailyScore(scores, 4))}</td>
                 <td>${fieldPos} (${scoreToParText})</td>
                 <td><strong>${formatToPar(total)}</strong></td>
-                <td class="status-cell ${statusClass(statusText.split("·")[0].trim())}">${statusText}</td>
+                <td class="status-cell ${statusClass(statusText)}">${statusText}</td>
               </tr>
             `;
           }).join("");

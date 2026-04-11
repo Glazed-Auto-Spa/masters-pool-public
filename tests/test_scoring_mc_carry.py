@@ -54,6 +54,7 @@ class TestMissedCutCarryAverage(unittest.TestCase):
         self.assertEqual(pick0["dayScores"][2], 7)
         self.assertEqual(pick0["dayScores"][3], 6)
         self.assertEqual(pick0["dayScores"][4], 6)
+        self.assertEqual(pick0.get("penaltyWeekendAvgToPar"), 6)
         # Other seven picks contribute 0 each day.
         self.assertEqual(out["leaderboard"][0]["eventScore"], 24)
         self.assertEqual(out["leaderboard"][0]["dailyScores"][3], 6)

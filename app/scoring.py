@@ -362,11 +362,15 @@ def _build_pick_detail(
         )
         for day in range(1, 5)
     }
+    penalty_avg: int | None = None
+    if player is not None and is_penalty_status(status):
+        penalty_avg = _floored_avg_thu_fri_to_par(player)
     return {
         "playerId": player_id,
         "playerName": player_name,
         "status": status,
         "statusDisplay": format_pick_status_display(status),
+        "penaltyWeekendAvgToPar": penalty_avg,
         "dayScores": day_scores,
         "counted": counted,
         "roundScorecards": round_scorecards,
