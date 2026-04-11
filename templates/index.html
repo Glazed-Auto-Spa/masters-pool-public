@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412u') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412w') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -600,73 +600,80 @@
         <h2 id="payout-settlement-sans-title" class="payout-settlement-sans-title">
           Payout structure &amp; settlement <span class="payout-settlement-sans-paren">(excluding Alfredo)</span>
         </h2>
-        <p class="payout-disclaimer">
-          <strong>Hypothetical worksheet:</strong> Same rules as the main payout block above, but <strong>Alfredo is treated as if he never joined</strong> — his picks and buy-in are removed, the main pot is <strong>{{ (config.participants | length) - 1 }} × $25</strong>, and side games are re-zero-summed across the remaining pool only. Live Standings and all sections above still reflect the real contest.
-        </p>
-        <p class="payout-disclaimer payout-disclaimer--secondary">
-          <strong>How it works:</strong> Winner-take-all main pot to #1 on this smaller leaderboard, side nets for Eagles, Aces, Streaks, and Daily winners across the remaining members, minimal transfers assuming a <strong>$25</strong> buy-in from each person still in this hypothetical pool.
-        </p>
-        <div class="payout-controls">
-          <label for="payout-focus-sans">Show settlement for</label>
-          <select id="payout-focus-sans">
-            <option value="">Everyone (full list)</option>
-            {% for p in config.participants %}
-            {% if p.name != "Alfredo" %}
-            <option value="{{ p.name }}">{{ p.name }}</option>
-            {% endif %}
-            {% endfor %}
-          </select>
-        </div>
-        <p class="payout-live-note">
-          <strong>Live:</strong> Recalculates with each pool data refresh (same cadence as the main payout section).
-        </p>
-        <div id="payout-settlement-output-sans" class="payout-settlement-output" aria-live="polite">
-          <p class="payout-empty">Settlement lines load after the first live standings update.</p>
-        </div>
-        <div class="payout-venmo-directory">
-          <h3 class="payout-venmo-directory-title">Venmo directory</h3>
-          <p class="payout-venmo-note">
-            Tap a handle to open that person on
-            <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">Venmo</a> (web or app) so you can send
-            payment.
-          </p>
-          <div class="payout-venmo-table-wrap">
-            <table class="pick-table payout-venmo-table">
-              <thead>
-                <tr>
-                  <th>Participant</th>
-                  <th>Pay on Venmo</th>
-                </tr>
-              </thead>
-              <tbody>
+        <details class="payout-settlement-sans-details">
+          <summary class="payout-settlement-sans-details-summary">
+            <span class="payout-settlement-sans-details-summary-text">Show worksheet, transfers &amp; Venmo</span>
+          </summary>
+          <div class="payout-settlement-sans-details-body">
+            <p class="payout-disclaimer">
+              <strong>Hypothetical worksheet:</strong> Same rules as the main payout block above, but <strong>Alfredo is treated as if he never joined</strong> — his picks and buy-in are removed, the main pot is <strong>{{ (config.participants | length) - 1 }} × $25</strong>, and side games are re-zero-summed across the remaining pool only. Live Standings and all sections above still reflect the real contest.
+            </p>
+            <p class="payout-disclaimer payout-disclaimer--secondary">
+              <strong>How it works:</strong> Winner-take-all main pot to #1 on this smaller leaderboard, side nets for Eagles, Aces, Streaks, and Daily winners across the remaining members, minimal transfers assuming a <strong>$25</strong> buy-in from each person still in this hypothetical pool.
+            </p>
+            <div class="payout-controls">
+              <label for="payout-focus-sans">Show settlement for</label>
+              <select id="payout-focus-sans">
+                <option value="">Everyone (full list)</option>
                 {% for p in config.participants %}
                 {% if p.name != "Alfredo" %}
-                {% set name = p.name %}
-                {% set entry = venmo_directory.get(name) or venmo_directory.get((name.split(" ") | first)) %}
-                {% set raw = ((p.venmo_handle or "") | trim) or ((entry.get("venmo_handle", "") if entry else "") | trim) %}
-                {% set h = ((raw[1:]) if raw and raw[0:1] == "@" else raw) | trim %}
-                {% if h %}
-                {% set venmo_app = "venmo://paycharge?txn=pay&recipients=" ~ (h | urlencode) ~ "&note=" ~ ("Masters pool" | urlencode) %}
-                <tr>
-                  <td>{{ name }}</td>
-                  <td>
-                    <a
-                      class="payout-venmo-pay"
-                      href="https://venmo.com/{{ h }}"
-                      data-venmo-app="{{ venmo_app }}"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >@{{ h }}</a
-                    >
-                  </td>
-                </tr>
-                {% endif %}
+                <option value="{{ p.name }}">{{ p.name }}</option>
                 {% endif %}
                 {% endfor %}
-              </tbody>
-            </table>
+              </select>
+            </div>
+            <p class="payout-live-note">
+              <strong>Live:</strong> Recalculates with each pool data refresh (same cadence as the main payout section).
+            </p>
+            <div id="payout-settlement-output-sans" class="payout-settlement-output" aria-live="polite">
+              <p class="payout-empty">Settlement lines load after the first live standings update.</p>
+            </div>
+            <div class="payout-venmo-directory">
+              <h3 class="payout-venmo-directory-title">Venmo directory</h3>
+              <p class="payout-venmo-note">
+                Tap a handle to open that person on
+                <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">Venmo</a> (web or app) so you can send
+                payment.
+              </p>
+              <div class="payout-venmo-table-wrap">
+                <table class="pick-table payout-venmo-table">
+                  <thead>
+                    <tr>
+                      <th>Participant</th>
+                      <th>Pay on Venmo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for p in config.participants %}
+                    {% if p.name != "Alfredo" %}
+                    {% set name = p.name %}
+                    {% set entry = venmo_directory.get(name) or venmo_directory.get((name.split(" ") | first)) %}
+                    {% set raw = ((p.venmo_handle or "") | trim) or ((entry.get("venmo_handle", "") if entry else "") | trim) %}
+                    {% set h = ((raw[1:]) if raw and raw[0:1] == "@" else raw) | trim %}
+                    {% if h %}
+                    {% set venmo_app = "venmo://paycharge?txn=pay&recipients=" ~ (h | urlencode) ~ "&note=" ~ ("Masters pool" | urlencode) %}
+                    <tr>
+                      <td>{{ name }}</td>
+                      <td>
+                        <a
+                          class="payout-venmo-pay"
+                          href="https://venmo.com/{{ h }}"
+                          data-venmo-app="{{ venmo_app }}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          >@{{ h }}</a
+                        >
+                      </td>
+                    </tr>
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
+        </details>
       </section>
       {% endif %}
     </main>

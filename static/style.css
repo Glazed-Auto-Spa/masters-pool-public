@@ -3251,7 +3251,8 @@ tbody tr:hover {
   border-top: 2px solid #dfe7ec;
 }
 
-.skin-masters-v7 .payout-settlement-sans-title {
+/* Must beat .payout-settlement h2 (0,2,1) so the sans heading is red, not #193c4b */
+.skin-masters-v7 .payout-settlement--sans-alfredo h2.payout-settlement-sans-title {
   margin: 0 0 10px;
   font-size: clamp(1.05rem, 1.5vw, 1.25rem);
   font-family: "Libre Baskerville", ui-serif, Georgia, serif;
@@ -3259,8 +3260,71 @@ tbody tr:hover {
   font-weight: 700;
 }
 
-.skin-masters-v7 .payout-settlement-sans-paren {
+.skin-masters-v7 .payout-settlement--sans-alfredo h2.payout-settlement-sans-title .payout-settlement-sans-paren {
+  color: inherit;
   font-weight: 700;
+}
+
+.skin-masters-v7 .payout-settlement-sans-details {
+  margin-top: 8px;
+  border: 1px solid #c9d6de;
+  border-radius: 10px;
+  background: #f6f9fb;
+  overflow: hidden;
+}
+
+.skin-masters-v7 .payout-settlement-sans-details > summary {
+  list-style: none;
+}
+
+.skin-masters-v7 .payout-settlement-sans-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.skin-masters-v7 .payout-settlement-sans-details-summary {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  cursor: pointer;
+  color: #214a5c;
+  font-size: 0.9rem;
+  font-weight: 600;
+  user-select: none;
+}
+
+.skin-masters-v7 .payout-settlement-sans-details-summary:hover {
+  background: #eaf0f4;
+}
+
+.skin-masters-v7 .payout-settlement-sans-details-summary-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.skin-masters-v7 .payout-settlement-sans-details-summary-text::before {
+  content: "";
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  border-right: 2px solid #214a5c;
+  border-bottom: 2px solid #214a5c;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.skin-masters-v7 .payout-settlement-sans-details[open] .payout-settlement-sans-details-summary-text::before {
+  transform: rotate(45deg);
+}
+
+.skin-masters-v7 .payout-settlement-sans-details-body {
+  padding: 0 14px 16px;
+  border-top: 1px solid #dce6eb;
+}
+
+.skin-masters-v7 .payout-settlement-sans-details-body > .payout-disclaimer:first-child {
+  margin-top: 12px;
 }
 
 .skin-masters-v7 .payout-daily-side-table td.daily-side-winner-final {
