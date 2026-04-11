@@ -295,48 +295,6 @@
         </table>
       </section>
 
-      <section class="sidegames">
-        <h2>Side Game Leaders</h2>
-        <div class="sidegames-grid">
-          <article class="sidegame-card">
-            <h3>Eagles ($50)</h3>
-            <p class="sidegame-rule">Rule: each eagle by any golfer on your roster counts as one eagle event for this side game.</p>
-            <ol id="side-eagles">
-              {% for row in state.get("sideGameLeaders", {}).get("eagles", [])[:3] %}
-              <li>{{ row.name }} - ${{ row.amount }}</li>
-              {% endfor %}
-            </ol>
-          </article>
-          <article class="sidegame-card">
-            <h3>Aces ($100)</h3>
-            <p class="sidegame-rule">Rule: each hole-in-one (ace) by any golfer on your roster counts as one ace event.</p>
-            <ol id="side-aces">
-              {% for row in state.get("sideGameLeaders", {}).get("aces", [])[:3] %}
-              <li>{{ row.name }} - ${{ row.amount }}</li>
-              {% endfor %}
-            </ol>
-          </article>
-          <article class="sidegame-card">
-            <h3>Birdie Streaks ($50)</h3>
-            <p class="sidegame-rule">Rule: a streak starts at 3 straight birdie-or-better holes, then extends with +1 event for each additional consecutive qualifying hole.</p>
-            <ol id="side-streaks">
-              {% for row in state.get("sideGameLeaders", {}).get("streaks", [])[:3] %}
-              <li>{{ row.name }} - ${{ row.amount }}</li>
-              {% endfor %}
-            </ol>
-          </article>
-          <article class="sidegame-card">
-            <h3>Daily Winners ($50/day)</h3>
-            <p class="sidegame-rule">Rule: each day (Thu/Fri/Sat/Sun), the single lowest team score wins that day’s event. Future days do not count until they begin.</p>
-            <ol id="side-daily-winners">
-              {% for row in state.get("sideGameLeaders", {}).get("dailyWinners", [])[:3] %}
-              <li>{{ row.name }} - ${{ row.amount }}</li>
-              {% endfor %}
-            </ol>
-          </article>
-        </div>
-      </section>
-
       <section class="rules-section">
         <h2>Rules & Payouts</h2>
         <div class="rules-grid">
@@ -996,7 +954,6 @@
           participantsSignature = nextParticipantsSignature;
           renderParticipantDetails(latestParticipants);
         }
-        renderSideGames(data.sideGameLeaders || {});
         const nextFieldSig = JSON.stringify(data.mastersFieldLeaderboard || []);
         if (nextFieldSig !== mastersFieldSignature) {
           mastersFieldSignature = nextFieldSig;
@@ -1234,30 +1191,6 @@
         tabs.forEach((tab) => {
           tab.addEventListener("click", () => activate(tab.dataset.day));
         });
-      }
-
-      function renderSideGames(sideGames) {
-        const mount = (id, rows) => {
-          const root = document.getElementById(id);
-          root.innerHTML = "";
-          const topRows = (rows || []).slice(0, 3);
-          if (!topRows.length) {
-            const li = document.createElement("li");
-            li.className = "empty-note";
-            li.textContent = "No qualifying events yet.";
-            root.appendChild(li);
-            return;
-          }
-          for (const row of topRows) {
-            const li = document.createElement("li");
-            li.textContent = `${row.name} - $${row.amount}`;
-            root.appendChild(li);
-          }
-        };
-        mount("side-eagles", sideGames.eagles || []);
-        mount("side-aces", sideGames.aces || []);
-        mount("side-streaks", sideGames.streaks || []);
-        mount("side-daily-winners", sideGames.dailyWinners || []);
       }
 
       async function refreshState() {
