@@ -14,19 +14,20 @@
       {%- endif -%}
     {%- endif -%}
   {%- endmacro %}
+  {# Optional per person: "profile_url": "https://venmo.com/u/Your-Venmo-Handle" — Venmo does not support reliable pay-by-phone deep links. #}
   {% set venmo_directory = {
-    "Mark": "6027157043",
-    "Steve": "6106396553",
-    "Alfredo": "6023996274",
-    "Eric": "5208087265",
-    "Amrit": "2623583389",
-    "Sajiv": "2486356169",
+    "Mark": {"phone": "6027157043"},
+    "Steve": {"phone": "6106396553"},
+    "Alfredo": {"phone": "6023996274"},
+    "Eric": {"phone": "5208087265"},
+    "Amrit": {"phone": "2623583389"},
+    "Sajiv": {"phone": "2486356169"},
   } %}
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412a') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412c') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -486,36 +487,51 @@
             {% endfor %}
           </select>
         </div>
+        <p class="payout-live-note">
+          <strong>Live:</strong> Totals, transfers, and breakdown here recalculate whenever pool data reloads (same cadence as
+          <strong>Live Standings</strong> and the refresh countdown in the ribbon).
+        </p>
         <div id="payout-settlement-output" class="payout-settlement-output" aria-live="polite">
           <p class="payout-empty">Settlement lines load after the first live standings update.</p>
         </div>
-        <details class="payout-venmo-directory">
-          <summary class="payout-venmo-directory-summary">Venmo directory (phone on file)</summary>
+        <div class="payout-venmo-directory">
+          <h3 class="payout-venmo-directory-title">Venmo directory</h3>
           <p class="payout-venmo-note">
-            On a phone, <strong>Pay in Venmo</strong> tries to open the Venmo app with this contact and a note prefilled.
-            On desktop, Venmo does not provide a reliable pay-by-phone URL; use <strong>Copy number</strong> and pay in the
-            app or at <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">venmo.com</a> after you sign in.
+            Venmo does <strong>not</strong> expose a supported way to open a payment to someone using only a phone number
+            (links that pass a number usually open the app but show &ldquo;not found&rdquo;). Use
+            <strong>Copy number</strong>, then in Venmo tap <strong>Pay</strong> / search and paste the number, or find them
+            in your contacts. Optional: add each person&rsquo;s public
+            <a href="https://help.venmo.com/hc/en-us/articles/235377287-18376507633165" target="_blank" rel="noopener noreferrer">Venmo profile URL</a>
+            in <code>templates/index.html</code> as <code>profile_url</code> next to <code>phone</code> to show a working
+            <strong>Venmo profile</strong> button. Open
+            <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">venmo.com</a> or the Venmo app and use
+            <strong>Search</strong> with the copied number.
           </p>
           <div class="payout-venmo-table-wrap">
             <table class="pick-table payout-venmo-table">
               <thead>
                 <tr>
                   <th>Participant</th>
-                  <th>Phone (Venmo)</th>
+                  <th>Phone (on file)</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {% for name, phone in venmo_directory.items() %}
+                {% for name, entry in venmo_directory.items() %}
+                {% set phone = entry.phone %}
                 <tr>
                   <td>{{ name }}</td>
                   <td><span class="payout-phone-digits">+1 {{ phone[:3] }} {{ phone[3:6] }} {{ phone[6:] }}</span></td>
                   <td class="payout-venmo-actions">
+                    {% if entry.get("profile_url") %}
                     <a
-                      class="payout-venmo-app"
-                      href="venmo://paycharge?txn=pay&amp;recipients=%2B1{{ phone }}&amp;note={{ 'Masters pool settlement'|urlencode }}"
-                      >Pay in Venmo</a
+                      class="payout-venmo-profile"
+                      href="{{ entry.profile_url }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Venmo profile</a
                     >
+                    {% endif %}
                     <button type="button" class="payout-copy-phone" data-phone="{{ phone }}">Copy number</button>
                   </td>
                 </tr>
@@ -523,7 +539,7 @@
               </tbody>
             </table>
           </div>
-        </details>
+        </div>
       </section>
     </main>
 
@@ -806,25 +822,15 @@
 
       function formatMoneyPayout(n) {
         const x = Number(n);
-        if (Number.isNaN(x)) return "$0.00";
-        return `$${x.toFixed(2)}`;
+        if (Number.isNaN(x)) return "$0";
+        return `$${Math.round(x)}`;
       }
 
       function venmoDigitsForName(name) {
-        const d = VENMO_DIRECTORY[name];
-        return d ? String(d).replace(/\D/g, "") : "";
-      }
-
-      function formatPhoneUs(digits10) {
-        const d = String(digits10).replace(/\D/g, "");
-        if (d.length !== 10) return d;
-        return `+1 (${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
-      }
-
-      function venmoAppHref(digits10, note) {
-        const rec = encodeURIComponent(`+1${digits10}`);
-        const n = encodeURIComponent(note || "Masters pool settlement");
-        return `venmo://paycharge?txn=pay&recipients=${rec}&note=${n}`;
+        const raw = VENMO_DIRECTORY[name];
+        if (!raw) return "";
+        const phone = typeof raw === "string" ? raw : raw.phone;
+        return phone ? String(phone).replace(/\D/g, "") : "";
       }
 
       function payoutMainValue(row) {
@@ -918,12 +924,6 @@
         const breakdownRows = positions
           .map((p) => {
             const en = escapeHtmlPayout(p.name);
-            const digits = venmoDigitsForName(p.name);
-            const venmo =
-              digits !== ""
-                ? `<a class="payout-inline-venmo" href="${escapeHtmlPayout(venmoAppHref(digits, "Pay " + p.name))}">Pay in Venmo</a>
-                   <a class="payout-inline-web" href="https://venmo.com/" target="_blank" rel="noopener noreferrer">venmo.com</a>`
-                : "<span class=\"payout-no-venmo\">No Venmo on file</span>";
             return `<tr>
               <td><strong>${en}</strong> <span class="payout-rank-muted">(#${p.rank})</span></td>
               <td class="payout-num">${formatMoneyPayout(p.main)}</td>
@@ -934,13 +934,12 @@
               <td class="payout-num">${formatMoneyPayout(p.net)}</td>
               <td class="payout-num payout-num--emph">${formatMoneyPayout(p.total)}</td>
               <td class="payout-num ${p.position >= 0 ? "payout-positive" : "payout-negative"}">${formatMoneyPayout(p.position)}</td>
-              <td class="payout-actions">${venmo}</td>
             </tr>`;
           })
           .join("");
 
         html += `<h3 class="payout-subhead">Per-participant totals</h3>
-          <p class="payout-table-note">Columns: main event payout, raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Side Bet Net</strong> (after zero-sum split), <strong>Total paid out</strong> (main + net), then <strong>Net vs buy-in</strong> (positive = you are owed that much after your $25).</p>
+          <p class="payout-table-note">Columns: main event payout, raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Side Bet Net</strong> (after zero-sum split), <strong>Total paid out</strong> (main + net), then <strong>Net vs buy-in</strong> (positive = you are owed that much after your $25). Use the <strong>Venmo directory</strong> below for payee phones.</p>
           <div class="payout-table-scroll">
           <table class="pick-table payout-breakdown-table">
             <thead><tr>
@@ -953,62 +952,48 @@
               <th>Side net</th>
               <th>Total out</th>
               <th>Net vs $25</th>
-              <th>Venmo</th>
             </tr></thead>
             <tbody>${breakdownRows}</tbody>
           </table></div>
-          <p class="payout-sumcheck">Check: sum of &ldquo;Net vs $25&rdquo; should be $0.00 — currently <strong>${formatMoneyPayout(sumPos)}</strong>.</p>`;
+          <p class="payout-sumcheck">Check: sum of &ldquo;Net vs $25&rdquo; should be <strong>$0</strong> — currently <strong>${formatMoneyPayout(sumPos)}</strong>.</p>`;
 
         let xferRows = transfers
           .map((t) => {
-            const digits = venmoDigitsForName(t.to);
-            const ven =
-              digits !== ""
-                ? `<a href="${escapeHtmlPayout(venmoAppHref(digits, "From " + t.from))}">Pay ${escapeHtmlPayout(t.to)}</a>`
-                : "";
             return `<tr>
               <td><strong>${escapeHtmlPayout(t.from)}</strong></td>
               <td aria-hidden="true">→</td>
               <td><strong>${escapeHtmlPayout(t.to)}</strong></td>
               <td class="payout-num">${formatMoneyPayout(t.amount)}</td>
-              <td class="payout-actions">${ven}</td>
             </tr>`;
           })
           .join("");
 
         if (!xferRows) {
           xferRows =
-            "<tr><td colspan=\"5\" class=\"payout-empty-row\">No payment chain needed — every net vs buy-in rounds to $0.00.</td></tr>";
+            "<tr><td colspan=\"4\" class=\"payout-empty-row\">No payment chain needed — every net vs buy-in rounds to $0.</td></tr>";
         }
 
         if (focus) {
           xferRows = transfers
             .filter((t) => t.from === focus || t.to === focus)
             .map((t) => {
-              const digits = venmoDigitsForName(t.to);
               const youPay = t.from === focus;
-              const ven =
-                digits !== "" && youPay
-                  ? `<a href="${escapeHtmlPayout(venmoAppHref(digits, "From " + focus))}">Open Venmo to pay</a>`
-                  : !youPay && venmoDigitsForName(t.from) !== ""
-                    ? `<span class="payout-await">They pay you via Venmo (see directory)</span>`
-                    : "";
               return `<tr>
                 <td>${youPay ? `<strong>You</strong> pay` : `<strong>${escapeHtmlPayout(t.from)}</strong> pays`}</td>
                 <td aria-hidden="true">→</td>
                 <td>${youPay ? escapeHtmlPayout(t.to) : "<strong>you</strong>"}</td>
                 <td class="payout-num">${formatMoneyPayout(t.amount)}</td>
-                <td class="payout-actions">${ven}</td>
               </tr>`;
             })
             .join("");
           if (!xferRows) {
             xferRows =
-              "<tr><td colspan=\"5\" class=\"payout-empty-row\">No direct transfers list for you in this minimal settlement (your net vs buy-in may be $0.00).</td></tr>";
+              "<tr><td colspan=\"4\" class=\"payout-empty-row\">No direct transfers list for you in this minimal settlement (your net vs buy-in may be $0).</td></tr>";
           }
         }
 
         html += `<h3 class="payout-subhead">${focus ? `Transfers involving ${escapeHtmlPayout(focus)}` : "Who pays whom (minimal transfers)"}</h3>
+          <p class="payout-table-note">Use the <strong>Venmo directory</strong> at the bottom of this section for payee phone numbers and optional profile links.</p>
           <div class="payout-table-scroll">
           <table class="pick-table payout-transfer-table">
             <thead><tr>
@@ -1016,7 +1001,6 @@
               <th></th>
               <th>To</th>
               <th>Amount</th>
-              <th>Venmo</th>
             </tr></thead>
             <tbody>${xferRows}</tbody>
           </table></div>`;
@@ -1556,18 +1540,16 @@
               <tbody>${pickRows}</tbody>
             </table>
             </div>
-            <details class="scorecard-details">
-              <summary class="scorecard-details-summary">
-                <span class="scorecard-details-summary-text">
-                  <span class="scorecard-details-summary-label">Hole-by-hole scorecards</span>
-                  <span class="scorecard-details-summary-meta">Thu–Sun rounds · click to expand</span>
-                </span>
-              </summary>
+            <div class="scorecard-details always-open">
+              <div class="scorecard-details-heading">
+                <span class="scorecard-details-summary-label">Hole-by-hole scorecards</span>
+                <span class="scorecard-details-summary-meta">Thu–Sun · updates with live data</span>
+              </div>
               <div class="scorecard-details-body">
                 <div class="day-tabs">${dayTabs}</div>
                 <div class="scorecards-by-day">${dayBlocks}</div>
               </div>
-            </details>
+            </div>
             <p class="legend">All picks count each day.</p>
           `;
           const picksWrap = card.querySelector(".participant-picks-wrap");
