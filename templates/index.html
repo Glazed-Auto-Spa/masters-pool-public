@@ -18,7 +18,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260411i') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260411j') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -58,61 +58,64 @@
       <section class="masters-field-leaderboard" aria-labelledby="live-leaderboards-title">
         <h2 id="live-leaderboards-title" class="masters-field-leaderboard-heading">Live leaderboards</h2>
         <p class="masters-field-leaderboard-note">
-          Masters: official ESPN field · top 10. Pool: full standings with holes remaining on picks still in play. Page
-          refresh every 5 minutes.
+          Masters: Top 10. Pool: Full standings with holes remaining on picks still in play. Page refresh every 5 minutes.
         </p>
         <div class="masters-field-leaderboard-shell">
           <div class="masters-field-leaderboard-col">
-            <p class="masters-field-col-label">Masters tournament · top 10</p>
+            <p class="masters-field-col-label">Masters tournament · Top 10</p>
             <table class="pick-table masters-field-leaderboard-table" aria-label="Masters tournament top 10">
               <thead>
                 <tr>
-                  <th>Pos</th>
-                  <th>Player</th>
-                  <th>Score</th>
-                  <th>Thru</th>
+                  <th class="masters-lb-col-ps"># / Scr</th>
+                  <th>Player · Thru</th>
                 </tr>
               </thead>
               <tbody id="masters-field-leaderboard-body">
                 {% for row in state.get("mastersFieldLeaderboard", []) %}
                 <tr>
-                  <td>{{ row.pos }}</td>
-                  <td>{{ row.name }}</td>
-                  <td>{{ row.scoreDisplay }}</td>
-                  <td>{{ row.thru }}</td>
+                  <td class="masters-lb-ps">
+                    <span class="lb-pos">{{ row.pos }}</span>
+                    <span class="lb-scr">{{ row.scoreDisplay }}</span>
+                  </td>
+                  <td class="masters-lb-player">
+                    <span class="lb-name">{{ row.name }}</span>
+                    <span class="lb-thru">{{ row.thru }}</span>
+                  </td>
                 </tr>
                 {% endfor %}
                 {% if not state.get("mastersFieldLeaderboard") %}
                 <tr>
-                  <td colspan="4" class="table-empty">Waiting for tournament data…</td>
+                  <td colspan="2" class="table-empty">Waiting for tournament data…</td>
                 </tr>
                 {% endif %}
               </tbody>
             </table>
           </div>
           <div class="masters-field-pool-col">
-            <p class="masters-field-col-label">Pool · standings</p>
+            <p class="masters-field-col-label">Pool · Full standings</p>
             <table class="pick-table masters-field-leaderboard-table" aria-label="Pool leaderboard">
               <thead>
                 <tr>
-                  <th>Rank</th>
-                  <th>Participant</th>
-                  <th>Total</th>
-                  <th>Holes left</th>
+                  <th class="masters-lb-col-ps"># / Tot</th>
+                  <th>Participant · Holes left</th>
                 </tr>
               </thead>
               <tbody id="masters-pool-leaderboard-body">
                 {% for row in state.get("leaderboard", []) %}
                 <tr>
-                  <td>{{ row.rank }}</td>
-                  <td>{{ row.name }}</td>
-                  <td>{{ to_par(row.eventScore) }}</td>
-                  <td><strong>{{ row.get("holesRemaining", 0) }}</strong></td>
+                  <td class="masters-lb-ps">
+                    <span class="lb-pos">{{ row.rank }}</span>
+                    <span class="lb-scr">{{ to_par(row.eventScore) }}</span>
+                  </td>
+                  <td class="masters-lb-player">
+                    <span class="lb-name">{{ row.name }}</span>
+                    <span class="lb-holes"><strong>{{ row.get("holesRemaining", 0) }}</strong> left</span>
+                  </td>
                 </tr>
                 {% endfor %}
                 {% if not state.get("leaderboard") %}
                 <tr>
-                  <td colspan="4" class="table-empty">No standings data yet.</td>
+                  <td colspan="2" class="table-empty">No standings data yet.</td>
                 </tr>
                 {% endif %}
               </tbody>
@@ -364,7 +367,9 @@
                 <strong>Total {{ to_par(participant.eventScore) }}</strong>
               </div>
             </header>
-            <table class="pick-table">
+            <div class="participant-picks-wrap">
+              <div class="pick-mobile-stack"></div>
+              <table class="pick-table pick-table--participant-desktop">
               <thead>
                 <tr>
                   <th>Pick</th>
@@ -415,6 +420,7 @@
                       {% set disp = "Live" %}
                     {% endif %}
                   {% endif %}
+                  {% set u = disp|string|trim|upper %}
                   {% set tee = pick.get("teeTimePhoenix") %}
                   {% set pavg = pick.get("penaltyWeekendAvgToPar") %}
                   {% if pavg is not none and u in ["MC", "WD", "DQ"] %}
@@ -422,7 +428,6 @@
                   {% else %}
                     {% set status_text = disp ~ (" · " ~ tee if tee and disp == "Live" else "") %}
                   {% endif %}
-                  {% set u = disp|string|trim|upper %}
                   {% if u == "MC" %}
                     {% set status_class = "status-mc" %}
                   {% elif u == "WD" %}
@@ -441,6 +446,7 @@
                 {% endfor %}
               </tbody>
             </table>
+            </div>
             <p class="legend">All picks count each day.</p>
           </article>
           {% endfor %}
@@ -651,6 +657,74 @@
         return n > 0 ? `+${n}` : `${n}`;
       }
 
+      function statusDisplayForPick(pick) {
+        const throughText = pick.throughDisplay || "-";
+        let statusText =
+          typeof pick.statusDisplay === "string" && pick.statusDisplay.trim()
+            ? pick.statusDisplay.trim()
+            : typeof pick.status === "string" && pick.status.trim()
+              ? pick.status.trim()
+              : throughText !== "-"
+                ? throughText
+                : "Live";
+        if (pick.teeTimePhoenix && statusText === "Live") {
+          statusText = `${statusText} · ${pick.teeTimePhoenix}`;
+        } else {
+          const sdU = String(pick.statusDisplay || "").trim().toUpperCase();
+          const pavg = pick.penaltyWeekendAvgToPar;
+          if (
+            (sdU === "MC" || sdU === "WD" || sdU === "DQ") &&
+            pavg !== null &&
+            pavg !== undefined &&
+            !Number.isNaN(Number(pavg))
+          ) {
+            statusText = `${statusText} ${formatToPar(Number(pavg))} AVG`;
+          }
+        }
+        return statusText;
+      }
+
+      function dayCountedClass(pick, day) {
+        const c = pick.counted || {};
+        return c[String(day)] || c[day] ? "counted" : "";
+      }
+
+      function buildPickMobileStackHtml(picks) {
+        return (picks || [])
+          .map((pick) => {
+            const scores = pick.dayScores || {};
+            const total = [1, 2, 3, 4].reduce((sum, day) => sum + Number(getDailyScore(scores, day) || 0), 0);
+            const fieldPos = pick.fieldPosition || "-";
+            const scoreToParText = formatToPar(pick.scoreToPar);
+            const statusText = statusDisplayForPick(pick);
+            const statusRow =
+              pickStatusChipHtml(pick) ||
+              `<span class="status-cell ${statusClass(statusText)}">${statusText}</span>`;
+            const dayCells = [1, 2, 3, 4]
+              .map((d) => {
+                const cls = dayCountedClass(pick, d);
+                const lbl = ["Thu", "Fri", "Sat", "Sun"][d - 1];
+                return `<div class="pick-mobile-metric${cls ? " counted" : ""}"><span class="pick-mobile-metric-lbl">${lbl}</span><span class="pick-mobile-metric-val">${formatToPar(
+                  getDailyScore(scores, d),
+                )}</span></div>`;
+              })
+              .join("");
+            return `
+        <div class="pick-mobile-card">
+          <div class="pick-mobile-card-head"><span class="pick-mobile-name">${pick.playerName}</span></div>
+          <div class="pick-mobile-card-inner">
+            <div class="pick-mobile-status-row">${statusRow}</div>
+            <div class="pick-mobile-day-grid">${dayCells}</div>
+            <div class="pick-mobile-foot">
+              <div class="pick-mobile-foot-item"><span class="pick-mobile-metric-lbl">Field</span><span class="pick-mobile-metric-val">${fieldPos} <span class="pick-mobile-sub">(${scoreToParText})</span></span></div>
+              <div class="pick-mobile-foot-item"><span class="pick-mobile-metric-lbl">Total</span><strong class="pick-mobile-total">${formatToPar(total)}</strong></div>
+            </div>
+          </div>
+        </div>`;
+          })
+          .join("");
+      }
+
       function renderStandings(rows) {
         const body = document.getElementById("standings-body");
         const mode = (document.getElementById("standings-sort") || {}).value || "rank";
@@ -738,7 +812,7 @@
         if (!rows || !rows.length) {
           const tr = document.createElement("tr");
           const td = document.createElement("td");
-          td.colSpan = 4;
+          td.colSpan = 2;
           td.className = "table-empty";
           td.textContent = "No standings data yet.";
           tr.appendChild(td);
@@ -747,21 +821,30 @@
         }
         for (const row of rows) {
           const tr = document.createElement("tr");
-          const tdRank = document.createElement("td");
-          tdRank.textContent = row.rank != null ? String(row.rank) : "";
-          const tdName = document.createElement("td");
-          tdName.textContent = row.name != null ? String(row.name) : "";
-          const tdTotal = document.createElement("td");
-          tdTotal.textContent = formatToPar(row.eventScore);
-          const tdHoles = document.createElement("td");
-          const strongHoles = document.createElement("strong");
+          const tdPs = document.createElement("td");
+          tdPs.className = "masters-lb-ps";
+          const spanRank = document.createElement("span");
+          spanRank.className = "lb-pos";
+          spanRank.textContent = row.rank != null ? String(row.rank) : "";
+          const spanTot = document.createElement("span");
+          spanTot.className = "lb-scr";
+          spanTot.textContent = formatToPar(row.eventScore);
+          tdPs.appendChild(spanRank);
+          tdPs.appendChild(spanTot);
+          const tdLine = document.createElement("td");
+          tdLine.className = "masters-lb-player";
+          const spanName = document.createElement("span");
+          spanName.className = "lb-name";
+          spanName.textContent = row.name != null ? String(row.name) : "";
+          const spanHoles = document.createElement("span");
+          spanHoles.className = "lb-holes";
           const hr = row.holesRemaining;
-          strongHoles.textContent = Number.isFinite(Number(hr)) ? String(Number(hr)) : "0";
-          tdHoles.appendChild(strongHoles);
-          tr.appendChild(tdRank);
-          tr.appendChild(tdName);
-          tr.appendChild(tdTotal);
-          tr.appendChild(tdHoles);
+          const holesN = Number.isFinite(Number(hr)) ? String(Number(hr)) : "0";
+          spanHoles.innerHTML = `<strong>${holesN}</strong> left`;
+          tdLine.appendChild(spanName);
+          tdLine.appendChild(spanHoles);
+          tr.appendChild(tdPs);
+          tr.appendChild(tdLine);
           body.appendChild(tr);
         }
       }
@@ -886,7 +969,7 @@
         if (!rows || rows.length === 0) {
           const tr = document.createElement("tr");
           const td = document.createElement("td");
-          td.colSpan = 4;
+          td.colSpan = 2;
           td.className = "table-empty";
           td.textContent = "Waiting for tournament data…";
           tr.appendChild(td);
@@ -895,11 +978,28 @@
         }
         for (const r of rows) {
           const tr = document.createElement("tr");
-          for (const key of ["pos", "name", "scoreDisplay", "thru"]) {
-            const td = document.createElement("td");
-            td.textContent = r[key] != null ? String(r[key]) : "--";
-            tr.appendChild(td);
-          }
+          const tdPs = document.createElement("td");
+          tdPs.className = "masters-lb-ps";
+          const spPos = document.createElement("span");
+          spPos.className = "lb-pos";
+          spPos.textContent = r.pos != null ? String(r.pos) : "--";
+          const spScr = document.createElement("span");
+          spScr.className = "lb-scr";
+          spScr.textContent = r.scoreDisplay != null ? String(r.scoreDisplay) : "--";
+          tdPs.appendChild(spPos);
+          tdPs.appendChild(spScr);
+          const tdLine = document.createElement("td");
+          tdLine.className = "masters-lb-player";
+          const spName = document.createElement("span");
+          spName.className = "lb-name";
+          spName.textContent = r.name != null ? String(r.name) : "--";
+          const spThru = document.createElement("span");
+          spThru.className = "lb-thru";
+          spThru.textContent = r.thru != null ? String(r.thru) : "--";
+          tdLine.appendChild(spName);
+          tdLine.appendChild(spThru);
+          tr.appendChild(tdPs);
+          tr.appendChild(tdLine);
           body.appendChild(tr);
         }
       }
@@ -999,38 +1099,20 @@
             { key: 3, label: "Sat" },
             { key: 4, label: "Sun" },
           ];
+          const pickMobileHtml = picks.length ? buildPickMobileStackHtml(picks) : "";
           const pickRows = picks.map((pick) => {
             const scores = pick.dayScores || {};
             const total = [1, 2, 3, 4].reduce((sum, day) => sum + Number(getDailyScore(scores, day) || 0), 0);
             const fieldPos = pick.fieldPosition || "-";
             const scoreToParText = formatToPar(pick.scoreToPar);
-            const throughText = pick.throughDisplay || "-";
-            let statusText = typeof pick.statusDisplay === "string" && pick.statusDisplay.trim()
-              ? pick.statusDisplay.trim()
-              : (typeof pick.status === "string" && pick.status.trim())
-                ? pick.status.trim()
-                : (throughText !== "-" ? throughText : "Live");
-            if (pick.teeTimePhoenix && statusText === "Live") {
-              statusText = `${statusText} · ${pick.teeTimePhoenix}`;
-            } else {
-              const sdU = String(pick.statusDisplay || "").trim().toUpperCase();
-              const pavg = pick.penaltyWeekendAvgToPar;
-              if (
-                (sdU === "MC" || sdU === "WD" || sdU === "DQ") &&
-                pavg !== null &&
-                pavg !== undefined &&
-                !Number.isNaN(Number(pavg))
-              ) {
-                statusText = `${statusText} ${formatToPar(Number(pavg))} AVG`;
-              }
-            }
+            const statusText = statusDisplayForPick(pick);
             return `
               <tr>
                 <td>${pick.playerName}</td>
-                <td>${formatToPar(getDailyScore(scores, 1))}</td>
-                <td>${formatToPar(getDailyScore(scores, 2))}</td>
-                <td>${formatToPar(getDailyScore(scores, 3))}</td>
-                <td>${formatToPar(getDailyScore(scores, 4))}</td>
+                <td class="${dayCountedClass(pick, 1)}">${formatToPar(getDailyScore(scores, 1))}</td>
+                <td class="${dayCountedClass(pick, 2)}">${formatToPar(getDailyScore(scores, 2))}</td>
+                <td class="${dayCountedClass(pick, 3)}">${formatToPar(getDailyScore(scores, 3))}</td>
+                <td class="${dayCountedClass(pick, 4)}">${formatToPar(getDailyScore(scores, 4))}</td>
                 <td>${fieldPos} (${scoreToParText})</td>
                 <td><strong>${formatToPar(total)}</strong></td>
                 <td class="status-cell ${statusClass(statusText)}">${statusText}</td>
@@ -1167,7 +1249,9 @@
                 <strong>Total ${formatToPar(participant.eventScore)}</strong>
               </div>
             </header>
-            <table class="pick-table">
+            <div class="participant-picks-wrap">
+              <div class="pick-mobile-stack">${pickMobileHtml}</div>
+              <table class="pick-table pick-table--participant-desktop">
               <thead>
                 <tr>
                   <th>Pick</th>
@@ -1182,12 +1266,15 @@
               </thead>
               <tbody>${pickRows}</tbody>
             </table>
+            </div>
             <div class="scorecard-details always-open">
               <div class="day-tabs">${dayTabs}</div>
               <div class="scorecards-by-day">${dayBlocks}</div>
             </div>
             <p class="legend">All picks count each day.</p>
           `;
+          const picksWrap = card.querySelector(".participant-picks-wrap");
+          if (picksWrap && pickMobileHtml) picksWrap.setAttribute("data-layout", "mobile-cards");
           root.appendChild(card);
           wireDayTabs(card);
         }
