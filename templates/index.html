@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412o') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412p') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -544,7 +544,7 @@
           <p class="payout-venmo-note">
             Tap a handle to open that person on
             <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">Venmo</a> (web or app) so you can send
-            payment. The same links appear under <strong>Who pays whom</strong> for everyone listed as a payee there.
+            payment.
           </p>
           <div class="payout-venmo-table-wrap">
             <table class="pick-table payout-venmo-table">
@@ -597,28 +597,6 @@
       let standingsSignature = "";
       let participantsSignature = "";
       let mastersFieldSignature = "";
-      const VENMO_DIRECTORY_BASE = {{ venmo_directory | tojson }};
-      const POOL_PARTICIPANT_VENMO_ROWS = {{ participant_venmo_rows | tojson }};
-      const VENMO_DIRECTORY = (function () {
-        const out = { ...(VENMO_DIRECTORY_BASE || {}) };
-        const rows = Array.isArray(POOL_PARTICIPANT_VENMO_ROWS) ? POOL_PARTICIPANT_VENMO_ROWS : [];
-        for (const row of rows) {
-          const k = String(row.name || "").trim();
-          const h = String(row.venmo_handle || "")
-            .trim()
-            .replace(/^@+/, "");
-          if (k && h) out[k] = { venmo_handle: h };
-        }
-        const allNames = [...new Set(rows.map((r) => String(r.name || "").trim()).filter(Boolean))];
-        for (const k of allNames) {
-          if (out[k] && out[k].venmo_handle) continue;
-          const first = k.split(/\s+/)[0];
-          if (first && first !== k && out[first] && out[first].venmo_handle) {
-            out[k] = { venmo_handle: out[first].venmo_handle };
-          }
-        }
-        return out;
-      })();
       const POOL_BUY_IN = 25;
       const POOL_SIZE = {{ config.participants|length }};
       let lastPayoutIntegrityOk = true;
@@ -886,53 +864,8 @@
         return `$${Math.round(x)}`;
       }
 
-      function venmoEntryForName(name) {
-        const key = String(name || "").trim();
-        if (!key) return null;
-        let raw = VENMO_DIRECTORY[key];
-        if (raw && typeof raw === "object" && raw.venmo_handle) return raw;
-        const first = key.split(/\s+/)[0];
-        if (first && first !== key) {
-          raw = VENMO_DIRECTORY[first];
-          if (raw && typeof raw === "object" && raw.venmo_handle) return raw;
-        }
-        return null;
-      }
-
-      function venmoHandleForName(name) {
-        const e = venmoEntryForName(name);
-        if (!e || !e.venmo_handle) return "";
-        return String(e.venmo_handle).trim().replace(/^@+/, "");
-      }
-
-      function venmoPayUrlForName(name) {
-        const e = venmoEntryForName(name);
-        if (e && e.pay_url) return String(e.pay_url).trim();
-        const h = venmoHandleForName(name);
-        return h ? `https://venmo.com/${encodeURIComponent(h)}` : "";
-      }
-
-      function venmoAppPayUrlFromHandle(h) {
-        const u = String(h || "").trim();
-        if (!u) return "";
-        const note = encodeURIComponent("Masters pool");
-        return `venmo://paycharge?txn=pay&recipients=${encodeURIComponent(u)}&note=${note}`;
-      }
-
       function isPayoutVenmoMobileLayout() {
         return window.matchMedia("(max-width: 960px)").matches;
-      }
-
-      function venmoPayLinkHtml(name) {
-        const h = venmoHandleForName(name);
-        const url = venmoPayUrlForName(name);
-        if (!h || !url) {
-          return `<span class="payout-no-venmo" title="Add venmo_handle in templates/index.html">—</span>`;
-        }
-        const at = `@${h}`;
-        const app = venmoAppPayUrlFromHandle(h);
-        const dataApp = app ? ` data-venmo-app="${escapeHtmlPayout(app)}"` : "";
-        return `<a class="payout-venmo-pay"${dataApp} href="${escapeHtmlPayout(url)}" target="_blank" rel="noopener noreferrer">${escapeHtmlPayout(at)}</a>`;
       }
 
       function payoutMainValue(row) {
@@ -1080,10 +1013,9 @@
             "<tr><td colspan=\"4\" class=\"payout-empty-row\">No payment chain needed — amounts net to $0 under the worksheet rules.</td></tr>";
         }
 
-        let xferSourceForPayees = transfers;
         if (focus) {
-          xferSourceForPayees = transfers.filter((t) => t.from === focus || t.to === focus);
-          xferRows = xferSourceForPayees
+          const xferFiltered = transfers.filter((t) => t.from === focus || t.to === focus);
+          xferRows = xferFiltered
             .map((t) => {
               const youPay = t.from === focus;
               return `<tr>
@@ -1097,25 +1029,13 @@
           if (!xferRows) {
             xferRows =
               "<tr><td colspan=\"4\" class=\"payout-empty-row\">No direct transfers list for you in this minimal settlement.</td></tr>";
-            xferSourceForPayees = [];
           }
-        }
-
-        const payeeNames = [...new Set(xferSourceForPayees.map((t) => t.to))].sort((a, b) =>
-          a.localeCompare(b, "en"),
-        );
-        let xferVenmoFooter = "";
-        if (payeeNames.length) {
-          const payeeItems = payeeNames
-            .map((n) => `<li><strong>${escapeHtmlPayout(n)}</strong> — ${venmoPayLinkHtml(n)}</li>`)
-            .join("");
-          xferVenmoFooter = `<div class="payout-transfer-venmo-footer"><p class="payout-transfer-venmo-footer-title">Pay on Venmo (recipients in the table above)</p><ul class="payout-transfer-venmo-list">${payeeItems}</ul></div>`;
         }
 
         html += `<h3 class="payout-subhead">${focus ? `Transfers involving ${escapeHtmlPayout(focus)}` : "Who pays whom (minimal transfers)"}</h3>
           <p class="payout-table-note">Each amount <strong>includes main-event and side-game settlement</strong> under the assumption above (everyone still owes their <strong>${formatMoneyPayout(
             POOL_BUY_IN,
-          )}</strong> buy-in into the pool). Use the <strong>Venmo directory</strong> at the bottom for handles<span class="payout-transfer-venmo-note-desktop">, or the links under this table</span>.</p>
+          )}</strong> buy-in into the pool). Use the <strong>Venmo directory</strong> at the bottom for handles.</p>
           <div class="payout-table-scroll">
           <table class="pick-table payout-transfer-table">
             <thead><tr>
@@ -1125,7 +1045,7 @@
               <th>Amount</th>
             </tr></thead>
             <tbody>${xferRows}</tbody>
-          </table></div>${xferVenmoFooter}`;
+          </table></div>`;
 
         if (focus) {
           const me = positions.find((p) => p.name === focus);

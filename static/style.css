@@ -3651,47 +3651,6 @@ tbody tr:hover {
   font-size: 0.82rem;
 }
 
-.skin-masters-v7 .payout-transfer-venmo-note-desktop {
-  display: inline;
-}
-
-.skin-masters-v7 .payout-transfer-venmo-footer {
-  margin-top: 10px;
-  padding: 10px 12px 12px;
-  border: 1px solid #d9e4ea;
-  border-radius: 8px;
-  background: #fbfdff;
-}
-
-.skin-masters-v7 .payout-transfer-venmo-footer-title {
-  margin: 0 0 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #1d3b4a;
-}
-
-.skin-masters-v7 .payout-transfer-venmo-list {
-  margin: 0;
-  padding-left: 1.1rem;
-  font-size: 0.8rem;
-  line-height: 1.55;
-  color: #2f4956;
-}
-
-.skin-masters-v7 .payout-transfer-venmo-list li {
-  margin-bottom: 4px;
-}
-
-@media (max-width: 960px) {
-  .skin-masters-v7 .payout-transfer-venmo-footer {
-    display: none !important;
-  }
-
-  .skin-masters-v7 .payout-transfer-venmo-note-desktop {
-    display: none;
-  }
-}
-
 .skin-masters-v7 .pick-table tbody td:first-child {
   font-weight: 700;
   color: #1d3b4a;
