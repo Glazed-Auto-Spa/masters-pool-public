@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412e') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412g') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -214,6 +214,7 @@
             <button id="share-standings" type="button">Share</button>
           </div>
         </div>
+        <div class="standings-table-scroll">
         <table id="standings">
           <thead>
             <tr>
@@ -277,12 +278,53 @@
             {% endfor %}
           </tbody>
         </table>
+        </div>
         <p class="standings-footnote" id="standings-weekend-footnote">
           <span class="standings-col-asterisk" aria-hidden="true">*</span>
           <strong>Saturday and Sunday.</strong>
           For picks no longer in the field (missed cut, withdrawal, disqualification, and similar), these columns still count toward the team daily total.
           Their Saturday and Sunday values use the <strong>Thursday/Friday average to par</strong> carry already applied in the live feed, so each day remains a full eight-pick sum.
         </p>
+      </section>
+
+      <section class="mobile-daily-tiebreak-standings" aria-labelledby="mobile-daily-tiebreak-title">
+        <h2 id="mobile-daily-tiebreak-title">Daily scores & tiebreaker</h2>
+        <p class="mobile-daily-tiebreak-caption">
+          Same order as Live Standings above. <strong>Green</strong> = lowest team score that day (daily winner).
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Participant</th>
+              <th>Thu</th>
+              <th>Fri</th>
+              <th aria-describedby="standings-weekend-footnote">
+                Sat<span class="standings-col-asterisk" aria-hidden="true">*</span>
+              </th>
+              <th aria-describedby="standings-weekend-footnote">
+                Sun<span class="standings-col-asterisk" aria-hidden="true">*</span>
+              </th>
+              <th>Total</th>
+              <th>Tiebreak Pick</th>
+              <th>Tiebreak Diff</th>
+            </tr>
+          </thead>
+          <tbody id="mobile-daily-tiebreak-body">
+            {% for row in state.get("leaderboard", []) %}
+            <tr>
+              <td>{{ row.name }}</td>
+              {% set day_wins = row.get("dailyWinnerDays", []) %}
+              <td class="{{ 'daily-winner-cell' if 1 in day_wins else '' }}">{{ to_par(row.dailyScores.get("1", row.dailyScores.get(1, 0))) }}</td>
+              <td class="{{ 'daily-winner-cell' if 2 in day_wins else '' }}">{{ to_par(row.dailyScores.get("2", row.dailyScores.get(2, 0))) }}</td>
+              <td class="{{ 'daily-winner-cell' if 3 in day_wins else '' }}">{{ to_par(row.dailyScores.get("3", row.dailyScores.get(3, 0))) }}</td>
+              <td class="{{ 'daily-winner-cell' if 4 in day_wins else '' }}">{{ to_par(row.dailyScores.get("4", row.dailyScores.get(4, 0))) }}</td>
+              <td><strong>{{ to_par(row.eventScore) }}</strong></td>
+              <td>{{ to_par(row.predictedWinningToPar) }}</td>
+              <td>{{ row.tiebreakDiff if row.tiebreakDiff is not none else "-" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </section>
 
       <section class="mobile-sidegame-standings">
@@ -925,7 +967,7 @@
           <p><strong>Buy-ins not collected:</strong> treat the full <strong>${formatMoneyPayout(
             pot,
           )}</strong> main pot (${POOL_SIZE} × ${formatMoneyPayout(POOL_BUY_IN)}) as <strong>still to be gathered and paid out</strong> — not sitting in anyone&rsquo;s account from this pool.</p>
-          <p><strong>Side games:</strong> Eagles, Aces, Streaks, and Daily winners are pooled and settled to a <strong>zero-sum net</strong> per participant (see Side Bet Net column).</p></div>`;
+          <p><strong>Side games:</strong> Eagles, Aces, Streaks, and Daily winners are pooled and settled to a <strong>zero-sum net</strong> per participant (see Side Game Standings below).</p></div>`;
         html += `<p class="payout-main-payee"><strong>Main event payee on these standings:</strong> route the <strong>${formatMoneyPayout(
           pot,
         )}</strong> winner-take-all pot to <strong>${escapeHtmlPayout(mainPayeeName || "—")}</strong> (Live Standings #1). Each other participant&rsquo;s <strong>${formatMoneyPayout(
@@ -942,14 +984,13 @@
               <td class="payout-num">${formatMoneyPayout(p.ace)}</td>
               <td class="payout-num">${formatMoneyPayout(p.streak)}</td>
               <td class="payout-num">${formatMoneyPayout(p.daily)}</td>
-              <td class="payout-num">${formatMoneyPayout(p.net)}</td>
               <td class="payout-num payout-num--emph">${formatMoneyPayout(p.total)}</td>
             </tr>`;
           })
           .join("");
 
         html += `<h3 class="payout-subhead">Per-participant totals</h3>
-          <p class="payout-table-note">Columns: main event payout (full pot to 1st on these standings), raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Side Bet Net</strong> (after zero-sum split), <strong>Total if pool paid out</strong> (main + side net). No buy-ins collected yet. Use the <strong>Venmo directory</strong> below for payee phones.</p>
+          <p class="payout-table-note">Columns: main event payout (full pot to 1st on these standings), raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Total if pool paid out</strong> (main + side net after the zero-sum split). No buy-ins collected yet. Use the <strong>Venmo directory</strong> below for payee phones.</p>
           <div class="payout-table-scroll">
           <table class="pick-table payout-breakdown-table">
             <thead><tr>
@@ -959,7 +1000,6 @@
               <th>Aces</th>
               <th>Streaks</th>
               <th>Daily</th>
-              <th>Side net</th>
               <th>Total out</th>
             </tr></thead>
             <tbody>${breakdownRows}</tbody>
@@ -1038,6 +1078,7 @@
         body.innerHTML = "";
         if (!sortedRows.length) {
           body.innerHTML = `<tr><td colspan="17" class="table-empty">No standings yet. Waiting for live data.</td></tr>`;
+          renderMobileDailyTiebreakStandings([]);
           renderMobileSidegameStandings([]);
           return;
         }
@@ -1070,7 +1111,34 @@
           `;
           body.appendChild(tr);
         }
+        renderMobileDailyTiebreakStandings(sortedRows);
         renderMobileSidegameStandings(sortedRows);
+      }
+
+      function renderMobileDailyTiebreakStandings(rows) {
+        const body = document.getElementById("mobile-daily-tiebreak-body");
+        if (!body) return;
+        body.innerHTML = "";
+        if (!rows.length) {
+          body.innerHTML = `<tr><td colspan="8" class="table-empty">No standings data yet.</td></tr>`;
+          return;
+        }
+        for (const row of rows) {
+          const tr = document.createElement("tr");
+          const dayWins = new Set((row.dailyWinnerDays || []).map((v) => Number(v)));
+          const dayClass = (day) => (dayWins.has(day) ? "daily-winner-cell" : "");
+          tr.innerHTML = `
+            <td>${row.name}</td>
+            <td class="${dayClass(1)}">${formatToPar(getDailyScore(row.dailyScores || {}, 1))}</td>
+            <td class="${dayClass(2)}">${formatToPar(getDailyScore(row.dailyScores || {}, 2))}</td>
+            <td class="${dayClass(3)}">${formatToPar(getDailyScore(row.dailyScores || {}, 3))}</td>
+            <td class="${dayClass(4)}">${formatToPar(getDailyScore(row.dailyScores || {}, 4))}</td>
+            <td><strong>${formatToPar(row.eventScore)}</strong></td>
+            <td>${formatToPar(row.predictedWinningToPar)}</td>
+            <td>${row.tiebreakDiff ?? "-"}</td>
+          `;
+          body.appendChild(tr);
+        }
       }
 
       function renderMobileSidegameStandings(rows) {
