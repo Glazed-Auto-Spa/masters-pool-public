@@ -14,11 +14,19 @@
       {%- endif -%}
     {%- endif -%}
   {%- endmacro %}
+  {% set venmo_directory = {
+    "Mark": "6027157043",
+    "Steve": "6106396553",
+    "Alfredo": "6023996274",
+    "Eric": "5208087265",
+    "Amrit": "2623583389",
+    "Sajiv": "2486356169",
+  } %}
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260411m') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412a') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -453,6 +461,70 @@
           {% endfor %}
         </div>
       </section>
+
+      <section class="payout-settlement" id="payout-settlement" aria-labelledby="payout-settlement-title">
+        <h2 id="payout-settlement-title">Payout structure & settlement</h2>
+        <p class="payout-disclaimer">
+          <strong>No money has moved through this app.</strong> This is an informal worksheet from the same numbers as Live
+          Standings. Final settlement is between participants (and any host who collected buy-ins). Numbers update when the
+          feed refreshes; use the payout integrity badge above when the tournament is complete.
+        </p>
+        <p class="payout-disclaimer payout-disclaimer--secondary">
+          <strong>How it works:</strong> Everyone is treated as having put in the
+          <strong>$25</strong> main buy-in. The leader board&rsquo;s <strong>main event payout</strong> is winner-take-all
+          (full pot to 1st). <strong>Side Bet Net</strong> is the zero-sum settlement for Eagles, Aces, Streaks, and Daily
+          winners (each dollar one person wins, others effectively fund). Your <strong>net position</strong> is
+          main + side net &minus; buy-in. The &ldquo;who pays whom&rdquo; list is a simple way to clear those positions with
+          the fewest transfers (you may settle differently if everyone agrees).
+        </p>
+        <div class="payout-controls">
+          <label for="payout-focus">Show settlement for</label>
+          <select id="payout-focus">
+            <option value="">Everyone (full list)</option>
+            {% for p in config.participants %}
+            <option value="{{ p.name }}">{{ p.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="payout-settlement-output" class="payout-settlement-output" aria-live="polite">
+          <p class="payout-empty">Settlement lines load after the first live standings update.</p>
+        </div>
+        <details class="payout-venmo-directory">
+          <summary class="payout-venmo-directory-summary">Venmo directory (phone on file)</summary>
+          <p class="payout-venmo-note">
+            On a phone, <strong>Pay in Venmo</strong> tries to open the Venmo app with this contact and a note prefilled.
+            On desktop, Venmo does not provide a reliable pay-by-phone URL; use <strong>Copy number</strong> and pay in the
+            app or at <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">venmo.com</a> after you sign in.
+          </p>
+          <div class="payout-venmo-table-wrap">
+            <table class="pick-table payout-venmo-table">
+              <thead>
+                <tr>
+                  <th>Participant</th>
+                  <th>Phone (Venmo)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for name, phone in venmo_directory.items() %}
+                <tr>
+                  <td>{{ name }}</td>
+                  <td><span class="payout-phone-digits">+1 {{ phone[:3] }} {{ phone[3:6] }} {{ phone[6:] }}</span></td>
+                  <td class="payout-venmo-actions">
+                    <a
+                      class="payout-venmo-app"
+                      href="venmo://paycharge?txn=pay&amp;recipients=%2B1{{ phone }}&amp;note={{ 'Masters pool settlement'|urlencode }}"
+                      >Pay in Venmo</a
+                    >
+                    <button type="button" class="payout-copy-phone" data-phone="{{ phone }}">Copy number</button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
     </main>
 
     <script>
@@ -468,6 +540,10 @@
       let standingsSignature = "";
       let participantsSignature = "";
       let mastersFieldSignature = "";
+      const VENMO_DIRECTORY = {{ venmo_directory | tojson }};
+      const POOL_BUY_IN = 25;
+      const POOL_SIZE = {{ config.participants|length }};
+      let lastPayoutIntegrityOk = true;
       const phxFormatter = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Phoenix",
         year: "numeric",
@@ -718,6 +794,248 @@
         </div>`;
           })
           .join("");
+      }
+
+      function escapeHtmlPayout(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function formatMoneyPayout(n) {
+        const x = Number(n);
+        if (Number.isNaN(x)) return "$0.00";
+        return `$${x.toFixed(2)}`;
+      }
+
+      function venmoDigitsForName(name) {
+        const d = VENMO_DIRECTORY[name];
+        return d ? String(d).replace(/\D/g, "") : "";
+      }
+
+      function formatPhoneUs(digits10) {
+        const d = String(digits10).replace(/\D/g, "");
+        if (d.length !== 10) return d;
+        return `+1 (${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+      }
+
+      function venmoAppHref(digits10, note) {
+        const rec = encodeURIComponent(`+1${digits10}`);
+        const n = encodeURIComponent(note || "Masters pool settlement");
+        return `venmo://paycharge?txn=pay&recipients=${rec}&note=${n}`;
+      }
+
+      function payoutMainValue(row) {
+        const v = row.mainEventPayoutDollars;
+        if (v === null || v === undefined) return 0;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function payoutNetValue(row) {
+        const v = row.netPayoutDollars;
+        if (v === null || v === undefined) return 0;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function computePayoutPositions(rows) {
+        return (rows || []).map((row) => {
+          const main = payoutMainValue(row);
+          const net = payoutNetValue(row);
+          const total = Math.round((main + net) * 100) / 100;
+          const position = Math.round((total - POOL_BUY_IN) * 100) / 100;
+          return {
+            name: row.name,
+            rank: row.rank,
+            main,
+            net,
+            eagle: Number(row.eagleBonusDollars) || 0,
+            ace: Number(row.aceBonusDollars) || 0,
+            streak: Number(row.birdieStreakBonusDollars) || 0,
+            daily: Number(row.dailyWinnerBonusDollars) || 0,
+            total,
+            position,
+          };
+        });
+      }
+
+      function minimizeSettlementTransfers(positions, eps = 0.005) {
+        const creditors = positions
+          .filter((p) => p.position > eps)
+          .map((p) => ({ name: p.name, remaining: Math.round(p.position * 100) / 100 }))
+          .sort((a, b) => b.remaining - a.remaining);
+        const debtors = positions
+          .filter((p) => p.position < -eps)
+          .map((p) => ({ name: p.name, remaining: Math.round(-p.position * 100) / 100 }))
+          .sort((a, b) => b.remaining - a.remaining);
+        const transfers = [];
+        let i = 0;
+        let j = 0;
+        while (i < debtors.length && j < creditors.length) {
+          const d = debtors[i];
+          const c = creditors[j];
+          const amt = Math.round(Math.min(d.remaining, c.remaining) * 100) / 100;
+          if (amt > eps) {
+            transfers.push({ from: d.name, to: c.name, amount: amt });
+          }
+          d.remaining = Math.round((d.remaining - amt) * 100) / 100;
+          c.remaining = Math.round((c.remaining - amt) * 100) / 100;
+          if (d.remaining <= eps) i += 1;
+          if (c.remaining <= eps) j += 1;
+        }
+        return transfers;
+      }
+
+      function renderPayoutSettlement(rows) {
+        const out = document.getElementById("payout-settlement-output");
+        if (!out) return;
+        const focus = (document.getElementById("payout-focus") || {}).value || "";
+        if (!rows || rows.length === 0) {
+          out.innerHTML =
+            "<p class=\"payout-empty\">Standings are not loaded yet. Settlement lines appear after the first live update.</p>";
+          return;
+        }
+        const positions = computePayoutPositions(rows);
+        const sumPos = Math.round(positions.reduce((s, p) => s + p.position, 0) * 100) / 100;
+        const transfers = minimizeSettlementTransfers(positions);
+        const pot = POOL_SIZE * POOL_BUY_IN;
+        let html = "";
+
+        if (!lastPayoutIntegrityOk) {
+          html +=
+            "<p class=\"payout-warning\"><strong>Payout integrity:</strong> figures are provisional until the integrity check passes (see status card).</p>";
+        }
+
+        html += `<div class="payout-pool-summary"><p><strong>Main pot (winner-take-all):</strong> ${formatMoneyPayout(
+          pot,
+        )} = ${POOL_SIZE} participants × ${formatMoneyPayout(POOL_BUY_IN)} buy-in.</p>`;
+        html +=
+          "<p><strong>Side games:</strong> Eagles, Aces, Streaks, and Daily winners are pooled and settled to a <strong>zero-sum net</strong> per participant (see Side Bet Net column).</p></div>";
+
+        const breakdownRows = positions
+          .map((p) => {
+            const en = escapeHtmlPayout(p.name);
+            const digits = venmoDigitsForName(p.name);
+            const venmo =
+              digits !== ""
+                ? `<a class="payout-inline-venmo" href="${escapeHtmlPayout(venmoAppHref(digits, "Pay " + p.name))}">Pay in Venmo</a>
+                   <a class="payout-inline-web" href="https://venmo.com/" target="_blank" rel="noopener noreferrer">venmo.com</a>`
+                : "<span class=\"payout-no-venmo\">No Venmo on file</span>";
+            return `<tr>
+              <td><strong>${en}</strong> <span class="payout-rank-muted">(#${p.rank})</span></td>
+              <td class="payout-num">${formatMoneyPayout(p.main)}</td>
+              <td class="payout-num">${formatMoneyPayout(p.eagle)}</td>
+              <td class="payout-num">${formatMoneyPayout(p.ace)}</td>
+              <td class="payout-num">${formatMoneyPayout(p.streak)}</td>
+              <td class="payout-num">${formatMoneyPayout(p.daily)}</td>
+              <td class="payout-num">${formatMoneyPayout(p.net)}</td>
+              <td class="payout-num payout-num--emph">${formatMoneyPayout(p.total)}</td>
+              <td class="payout-num ${p.position >= 0 ? "payout-positive" : "payout-negative"}">${formatMoneyPayout(p.position)}</td>
+              <td class="payout-actions">${venmo}</td>
+            </tr>`;
+          })
+          .join("");
+
+        html += `<h3 class="payout-subhead">Per-participant totals</h3>
+          <p class="payout-table-note">Columns: main event payout, raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Side Bet Net</strong> (after zero-sum split), <strong>Total paid out</strong> (main + net), then <strong>Net vs buy-in</strong> (positive = you are owed that much after your $25).</p>
+          <div class="payout-table-scroll">
+          <table class="pick-table payout-breakdown-table">
+            <thead><tr>
+              <th>Participant</th>
+              <th>Main</th>
+              <th>Eagles</th>
+              <th>Aces</th>
+              <th>Streaks</th>
+              <th>Daily</th>
+              <th>Side net</th>
+              <th>Total out</th>
+              <th>Net vs $25</th>
+              <th>Venmo</th>
+            </tr></thead>
+            <tbody>${breakdownRows}</tbody>
+          </table></div>
+          <p class="payout-sumcheck">Check: sum of &ldquo;Net vs $25&rdquo; should be $0.00 — currently <strong>${formatMoneyPayout(sumPos)}</strong>.</p>`;
+
+        let xferRows = transfers
+          .map((t) => {
+            const digits = venmoDigitsForName(t.to);
+            const ven =
+              digits !== ""
+                ? `<a href="${escapeHtmlPayout(venmoAppHref(digits, "From " + t.from))}">Pay ${escapeHtmlPayout(t.to)}</a>`
+                : "";
+            return `<tr>
+              <td><strong>${escapeHtmlPayout(t.from)}</strong></td>
+              <td aria-hidden="true">→</td>
+              <td><strong>${escapeHtmlPayout(t.to)}</strong></td>
+              <td class="payout-num">${formatMoneyPayout(t.amount)}</td>
+              <td class="payout-actions">${ven}</td>
+            </tr>`;
+          })
+          .join("");
+
+        if (!xferRows) {
+          xferRows =
+            "<tr><td colspan=\"5\" class=\"payout-empty-row\">No payment chain needed — every net vs buy-in rounds to $0.00.</td></tr>";
+        }
+
+        if (focus) {
+          xferRows = transfers
+            .filter((t) => t.from === focus || t.to === focus)
+            .map((t) => {
+              const digits = venmoDigitsForName(t.to);
+              const youPay = t.from === focus;
+              const ven =
+                digits !== "" && youPay
+                  ? `<a href="${escapeHtmlPayout(venmoAppHref(digits, "From " + focus))}">Open Venmo to pay</a>`
+                  : !youPay && venmoDigitsForName(t.from) !== ""
+                    ? `<span class="payout-await">They pay you via Venmo (see directory)</span>`
+                    : "";
+              return `<tr>
+                <td>${youPay ? `<strong>You</strong> pay` : `<strong>${escapeHtmlPayout(t.from)}</strong> pays`}</td>
+                <td aria-hidden="true">→</td>
+                <td>${youPay ? escapeHtmlPayout(t.to) : "<strong>you</strong>"}</td>
+                <td class="payout-num">${formatMoneyPayout(t.amount)}</td>
+                <td class="payout-actions">${ven}</td>
+              </tr>`;
+            })
+            .join("");
+          if (!xferRows) {
+            xferRows =
+              "<tr><td colspan=\"5\" class=\"payout-empty-row\">No direct transfers list for you in this minimal settlement (your net vs buy-in may be $0.00).</td></tr>";
+          }
+        }
+
+        html += `<h3 class="payout-subhead">${focus ? `Transfers involving ${escapeHtmlPayout(focus)}` : "Who pays whom (minimal transfers)"}</h3>
+          <div class="payout-table-scroll">
+          <table class="pick-table payout-transfer-table">
+            <thead><tr>
+              <th>From</th>
+              <th></th>
+              <th>To</th>
+              <th>Amount</th>
+              <th>Venmo</th>
+            </tr></thead>
+            <tbody>${xferRows}</tbody>
+          </table></div>`;
+
+        if (focus) {
+          const me = positions.find((p) => p.name === focus);
+          if (me) {
+            html += `<div class="payout-you-summary"><h3 class="payout-subhead">Your breakdown (${escapeHtmlPayout(focus)})</h3>
+              <ul class="payout-you-list">
+                <li><strong>Main event:</strong> ${formatMoneyPayout(me.main)}</li>
+                <li><strong>Side gross</strong> — Eagles ${formatMoneyPayout(me.eagle)}, Aces ${formatMoneyPayout(me.ace)}, Streaks ${formatMoneyPayout(me.streak)}, Daily ${formatMoneyPayout(me.daily)}</li>
+                <li><strong>Side Bet Net (after pool split):</strong> ${formatMoneyPayout(me.net)}</li>
+                <li><strong>Total paid from pool to you:</strong> ${formatMoneyPayout(me.total)}</li>
+                <li><strong>After your ${formatMoneyPayout(POOL_BUY_IN)} buy-in:</strong> <span class="${me.position >= 0 ? "payout-positive" : "payout-negative"}">${formatMoneyPayout(me.position)}</span> (${me.position >= 0 ? "others pay you this on net" : "you pay others this on net"})</li>
+              </ul></div>`;
+          }
+        }
+
+        out.innerHTML = html;
       }
 
       function renderStandings(rows) {
@@ -1048,6 +1366,8 @@
           renderMastersFieldLeaderboard(data.mastersFieldLeaderboard || []);
         }
         prevRanks = Object.fromEntries((data.leaderboard || []).map((row) => [row.name, row.rank]));
+        lastPayoutIntegrityOk = data.payoutIntegrityOk !== false;
+        renderPayoutSettlement(latestLeaderboard);
       }
 
       function renderParticipantDetails(participants) {
@@ -1303,6 +1623,32 @@
       document.getElementById("participant-focus").addEventListener("change", () => {
         renderParticipantDetails(latestParticipants);
       });
+      const payoutFocusEl = document.getElementById("payout-focus");
+      if (payoutFocusEl) {
+        payoutFocusEl.addEventListener("change", () => {
+          renderPayoutSettlement(latestLeaderboard);
+        });
+      }
+      const payoutSection = document.getElementById("payout-settlement");
+      if (payoutSection) {
+        payoutSection.addEventListener("click", async (e) => {
+          const btn = e.target.closest(".payout-copy-phone");
+          if (!btn) return;
+          const raw = btn.getAttribute("data-phone") || "";
+          const digits = raw.replace(/\D/g, "");
+          const text = digits.length === 10 ? `+1${digits}` : raw;
+          try {
+            await navigator.clipboard.writeText(text);
+            const prev = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(() => {
+              btn.textContent = prev;
+            }, 1800);
+          } catch {
+            window.prompt("Copy this number:", text);
+          }
+        });
+      }
       document.getElementById("download-standings").addEventListener("click", async () => {
         const table = document.getElementById("standings");
         if (!table) return;

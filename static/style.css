@@ -3394,6 +3394,243 @@ tbody tr:hover {
   color: #2f4956;
 }
 
+.skin-masters-v7 .payout-settlement {
+  margin-top: 28px;
+  padding: 18px 0 8px;
+  border-top: 1px solid #dce6eb;
+}
+
+.skin-masters-v7 .payout-settlement h2 {
+  margin: 0 0 10px;
+  color: #193c4b;
+  font-size: clamp(1.05rem, 1.6vw, 1.28rem);
+  font-family: "Libre Baskerville", ui-serif, Georgia, serif;
+}
+
+.skin-masters-v7 .payout-disclaimer {
+  margin: 0 0 10px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #4a6270;
+  max-width: 58rem;
+}
+
+.skin-masters-v7 .payout-disclaimer--secondary {
+  font-size: 0.8rem;
+  color: #556d79;
+}
+
+.skin-masters-v7 .payout-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 14px 0 12px;
+}
+
+.skin-masters-v7 .payout-controls label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2f4956;
+}
+
+.skin-masters-v7 .payout-controls select {
+  min-width: 12rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #c9d6de;
+  font-size: 0.82rem;
+}
+
+.skin-masters-v7 .payout-settlement-output {
+  margin-bottom: 16px;
+}
+
+.skin-masters-v7 .payout-empty,
+.skin-masters-v7 .payout-empty-row {
+  color: #617783;
+  font-size: 0.84rem;
+  margin: 0;
+}
+
+.skin-masters-v7 .payout-warning {
+  padding: 8px 10px;
+  margin: 0 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e8c9a8;
+  background: #fff8f0;
+  color: #6a4520;
+  font-size: 0.82rem;
+}
+
+.skin-masters-v7 .payout-pool-summary {
+  margin-bottom: 14px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #4a6270;
+  max-width: 58rem;
+}
+
+.skin-masters-v7 .payout-pool-summary p {
+  margin: 0 0 6px;
+}
+
+.skin-masters-v7 .payout-subhead {
+  margin: 18px 0 8px;
+  font-size: 0.92rem;
+  color: #1d3b4a;
+}
+
+.skin-masters-v7 .payout-table-note {
+  margin: 0 0 8px;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: #617783;
+  max-width: 58rem;
+}
+
+.skin-masters-v7 .payout-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  margin-bottom: 8px;
+}
+
+.skin-masters-v7 .payout-breakdown-table,
+.skin-masters-v7 .payout-transfer-table,
+.skin-masters-v7 .payout-venmo-table {
+  min-width: 520px;
+}
+
+.skin-masters-v7 .payout-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.skin-masters-v7 .payout-num--emph {
+  font-weight: 700;
+}
+
+.skin-masters-v7 .payout-positive {
+  color: #1f5f41;
+  font-weight: 700;
+}
+
+.skin-masters-v7 .payout-negative {
+  color: #8a2b24;
+  font-weight: 700;
+}
+
+.skin-masters-v7 .payout-rank-muted {
+  font-weight: 500;
+  color: #7a909e;
+  font-size: 0.78rem;
+}
+
+.skin-masters-v7 .payout-actions {
+  white-space: nowrap;
+  font-size: 0.74rem;
+}
+
+.skin-masters-v7 .payout-inline-venmo,
+.skin-masters-v7 .payout-venmo-app {
+  display: inline-block;
+  margin-right: 8px;
+  font-weight: 600;
+  color: #1d5f85;
+}
+
+.skin-masters-v7 .payout-inline-web {
+  font-weight: 500;
+  color: #48616f;
+}
+
+.skin-masters-v7 .payout-no-venmo,
+.skin-masters-v7 .payout-await {
+  color: #8a9399;
+  font-size: 0.72rem;
+}
+
+.skin-masters-v7 .payout-sumcheck {
+  margin: 0 0 6px;
+  font-size: 0.76rem;
+  color: #617783;
+}
+
+.skin-masters-v7 .payout-you-summary {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid #e3ebef;
+  border-radius: 8px;
+  background: #fbfdff;
+  max-width: 42rem;
+}
+
+.skin-masters-v7 .payout-you-list {
+  margin: 8px 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: #2f4956;
+}
+
+.skin-masters-v7 .payout-you-list li {
+  margin-bottom: 4px;
+}
+
+.skin-masters-v7 .payout-venmo-directory {
+  margin-top: 14px;
+  border: 1px solid #d9e4ea;
+  border-radius: 8px;
+  padding: 0 12px 12px;
+  background: #fff;
+  box-shadow: var(--v7-shadow-1);
+}
+
+.skin-masters-v7 .payout-venmo-directory-summary {
+  list-style: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #1d3b4a;
+  padding: 10px 0;
+}
+
+.skin-masters-v7 .payout-venmo-directory-summary::-webkit-details-marker {
+  display: none;
+}
+
+.skin-masters-v7 .payout-venmo-note {
+  margin: 0 0 10px;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: #617783;
+}
+
+.skin-masters-v7 .payout-venmo-note a {
+  color: #1d5f85;
+  font-weight: 600;
+}
+
+.skin-masters-v7 .payout-venmo-table-wrap {
+  overflow-x: auto;
+}
+
+.skin-masters-v7 .payout-copy-phone {
+  margin-left: 6px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  border-radius: 6px;
+  border: 1px solid #c9d6de;
+  background: #f2f7fa;
+  cursor: pointer;
+  color: #2f4956;
+}
+
+.skin-masters-v7 .payout-copy-phone:hover {
+  background: #e8f0f4;
+}
+
 .skin-masters-v7 .pick-table tbody td:first-child {
   font-weight: 700;
   color: #1d3b4a;
