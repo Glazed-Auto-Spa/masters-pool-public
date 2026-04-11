@@ -3391,8 +3391,7 @@ body.skin-masters-v7 {
   background: #f0f6fa;
 }
 
-.skin-masters-v7 #standings thead th .standings-col-asterisk,
-.skin-masters-v7 .mobile-daily-tiebreak-standings thead th .standings-col-asterisk {
+.skin-masters-v7 #standings thead th .standings-col-asterisk {
   display: inline-block;
   margin-left: 3px;
   font-size: 0.95em;
@@ -3401,10 +3400,6 @@ body.skin-masters-v7 {
   text-transform: none;
   color: #8a4a16;
   vertical-align: 0.06em;
-}
-
-.skin-masters-v7 .mobile-daily-tiebreak-standings thead th .standings-col-asterisk--tight {
-  margin-left: 0;
 }
 
 .skin-masters-v7 .standings-footnote {
@@ -3692,14 +3687,35 @@ body.skin-masters-v7 {
   box-sizing: border-box;
 }
 
-.skin-masters-v7 .scorecard-details-heading {
+.skin-masters-v7 .scorecard-details > summary.scorecard-details-summary {
+  list-style: none;
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  flex-wrap: nowrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px 12px;
+  gap: 10px;
   padding: 10px 12px;
-  border-bottom: 1px solid #e3ebef;
+  cursor: pointer;
+  font-weight: 600;
+  color: #1d3b4a;
+  user-select: none;
+}
+
+.skin-masters-v7 .scorecard-details-summary-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.skin-masters-v7 .scorecard-details > summary.scorecard-details-summary::-webkit-details-marker {
+  display: none;
+}
+
+.skin-masters-v7 .scorecard-details > summary.scorecard-details-summary::marker {
+  content: "";
 }
 
 .skin-masters-v7 .scorecard-details-summary-label {
@@ -3713,6 +3729,24 @@ body.skin-masters-v7 {
   font-weight: 500;
   color: #6b8494;
   letter-spacing: 0.02em;
+}
+
+.skin-masters-v7 .scorecard-details-summary::after {
+  content: "▸";
+  display: block;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  color: #5a7382;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+
+.skin-masters-v7 .scorecard-details[open] > summary.scorecard-details-summary::after {
+  transform: rotate(90deg);
+}
+
+.skin-masters-v7 .scorecard-details[open] > summary.scorecard-details-summary {
+  border-bottom: 1px solid #e3ebef;
 }
 
 .skin-masters-v7 .scorecard-details-body {
