@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412k') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412l') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -557,9 +557,10 @@
               <tbody>
                 {% for p in config.participants %}
                 {% set name = p.name %}
-                {% set entry = venmo_directory.get(name) %}
-                {% if entry and entry.get("venmo_handle") %}
-                {% set h = entry.venmo_handle %}
+                {% set entry = venmo_directory.get(name) or venmo_directory.get((name.split(" ") | first)) %}
+                {% set raw = ((p.venmo_handle or "") | trim) or ((entry.get("venmo_handle", "") if entry else "") | trim) %}
+                {% set h = ((raw[1:]) if raw and raw[0:1] == "@" else raw) | trim %}
+                {% if h %}
                 <tr>
                   <td>{{ name }}</td>
                   <td>
@@ -594,7 +595,28 @@
       let standingsSignature = "";
       let participantsSignature = "";
       let mastersFieldSignature = "";
-      const VENMO_DIRECTORY = {{ venmo_directory | tojson }};
+      const VENMO_DIRECTORY_BASE = {{ venmo_directory | tojson }};
+      const POOL_PARTICIPANT_VENMO_ROWS = {{ participant_venmo_rows | tojson }};
+      const VENMO_DIRECTORY = (function () {
+        const out = { ...(VENMO_DIRECTORY_BASE || {}) };
+        const rows = Array.isArray(POOL_PARTICIPANT_VENMO_ROWS) ? POOL_PARTICIPANT_VENMO_ROWS : [];
+        for (const row of rows) {
+          const k = String(row.name || "").trim();
+          const h = String(row.venmo_handle || "")
+            .trim()
+            .replace(/^@+/, "");
+          if (k && h) out[k] = { venmo_handle: h };
+        }
+        const allNames = [...new Set(rows.map((r) => String(r.name || "").trim()).filter(Boolean))];
+        for (const k of allNames) {
+          if (out[k] && out[k].venmo_handle) continue;
+          const first = k.split(/\s+/)[0];
+          if (first && first !== k && out[first] && out[first].venmo_handle) {
+            out[k] = { venmo_handle: out[first].venmo_handle };
+          }
+        }
+        return out;
+      })();
       const POOL_BUY_IN = 25;
       const POOL_SIZE = {{ config.participants|length }};
       let lastPayoutIntegrityOk = true;
@@ -865,9 +887,16 @@
       }
 
       function venmoEntryForName(name) {
-        const raw = VENMO_DIRECTORY[name];
-        if (!raw || typeof raw !== "object") return null;
-        return raw;
+        const key = String(name || "").trim();
+        if (!key) return null;
+        let raw = VENMO_DIRECTORY[key];
+        if (raw && typeof raw === "object" && raw.venmo_handle) return raw;
+        const first = key.split(/\s+/)[0];
+        if (first && first !== key) {
+          raw = VENMO_DIRECTORY[first];
+          if (raw && typeof raw === "object" && raw.venmo_handle) return raw;
+        }
+        return null;
       }
 
       function venmoHandleForName(name) {

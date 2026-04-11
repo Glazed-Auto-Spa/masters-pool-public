@@ -15,6 +15,7 @@ class ParticipantConfig:
     name: str
     predicted_winning_to_par: int
     picks: list[int]
+    venmo_handle: str | None = None
 
 
 @dataclass(slots=True)
@@ -51,6 +52,7 @@ def _load_config_from_raw(raw: dict[str, Any]) -> PoolConfig:
             name=item["name"],
             predicted_winning_to_par=int(item["predictedWinningToPar"]),
             picks=[int(player_id) for player_id in item["picks"]],
+            venmo_handle=_parse_optional_token(item.get("venmo_handle")),
         )
         for item in raw["participants"]
     ]

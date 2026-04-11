@@ -9,7 +9,8 @@
     {
       "name": "Alice",
       "predictedWinningToPar": -11,
-      "picks": [9478, 3470, 9780, 4587, 10592, 9037, 10364, 4348470]
+      "picks": [9478, 3470, 9780, 4587, 10592, 9037, 10364, 4348470],
+      "venmo_handle": "AliceVenmoUsername"
     },
     {
       "name": "Bob",

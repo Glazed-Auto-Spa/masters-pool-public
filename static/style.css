@@ -3635,14 +3635,15 @@ tbody tr:hover {
 }
 
 .skin-masters-v7 .payout-venmo-pay {
-  font-weight: 600;
-  font-size: 0.82rem;
-  color: #1d5f85;
-  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: #0f4a6e;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .skin-masters-v7 .payout-venmo-pay:hover {
-  text-decoration: underline;
+  color: #0a3552;
 }
 
 .skin-masters-v7 .payout-no-venmo {

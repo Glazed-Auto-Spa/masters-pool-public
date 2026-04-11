@@ -10,6 +10,15 @@ from app.config import load_runtime_config
 from app.service import PoolService
 
 
+def _strip_venmo_handle(raw: str | None) -> str:
+    if not raw:
+        return ""
+    s = str(raw).strip()
+    while s.startswith("@"):
+        s = s[1:].strip()
+    return s
+
+
 def create_app(base_dir: Path) -> Flask:
     app = Flask(
         __name__,
@@ -31,7 +40,19 @@ def create_app(base_dir: Path) -> Flask:
                 state = service.poll_once()
             except Exception:  # noqa: BLE001
                 state = {}
-        return render_template("index.html", state=state, config=config)
+        participant_venmo_rows = [
+            {
+                "name": p.name,
+                "venmo_handle": _strip_venmo_handle(p.venmo_handle),
+            }
+            for p in config.participants
+        ]
+        return render_template(
+            "index.html",
+            state=state,
+            config=config,
+            participant_venmo_rows=participant_venmo_rows,
+        )
 
     @app.get("/api/state")
     def api_state():
