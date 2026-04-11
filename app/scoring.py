@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -105,6 +106,35 @@ def is_penalty_status(status_blob: str) -> bool:
     return False
 
 
+def _is_missed_cut_penalty(status_blob: str) -> bool:
+    """Missed cut only — not WD/DQ (those keep full cumulative carry)."""
+    if not is_penalty_status(status_blob):
+        return False
+    s = status_blob.upper()
+    if "WITHDRAW" in s or "W/D" in s or re.search(r"(^|[^A-Z])WD([^A-Z]|$)", s):
+        return False
+    if "DISQUAL" in s or re.search(r"(^|[^A-Z])DQ([^A-Z]|$)", s):
+        return False
+    return True
+
+
+def _mc_floored_avg_pre_cut_to_par(player: PlayerSnapshot) -> int | None:
+    """
+    For missed cut: Thu+Fri (rounds 1–2) to-par averaged with math.floor, used for Sat/Sun each.
+    If only aggregate total_to_par exists (no per-round rows), assume two counting rounds: floor(total/2).
+    """
+    pre: list[int] = []
+    for rn in (1, 2):
+        rdata = player.rounds.get(rn)
+        if rdata is not None:
+            pre.append(rdata.to_par)
+    if pre:
+        return math.floor(sum(pre) / len(pre))
+    if player.total_to_par is not None:
+        return math.floor(player.total_to_par / 2)
+    return None
+
+
 def format_pick_status_display(status_blob: str) -> str:
     """
     Short label for pool UI (status column / scorecard chip): MC, WD, DQ, Live, or em dash.
@@ -155,8 +185,8 @@ def score_participants(
                 if round_data is not None:
                     score = round_data.to_par
                 else:
-                    # If a player misses the cut or withdraws, carry their cumulative
-                    # score to each remaining unplayed day.
+                    # Missed cut: floored average of Thu+Fri to-par for each of Sat/Sun.
+                    # WD/DQ: full cumulative to each remaining day.
                     carried = _carry_forward_score(player)
                     score = carried if carried is not None else 0
 
@@ -331,7 +361,11 @@ def _build_pick_detail(
         for day in range(1, 5)
     }
     round_scorecards = {
-        day: _round_card(player, day)
+        day: _round_card(
+            player,
+            day,
+            pick_day_score=pick_scores_by_day.get(day, {}).get(player_id),
+        )
         for day in range(1, 5)
     }
     return {
@@ -345,11 +379,30 @@ def _build_pick_detail(
     }
 
 
-def _round_card(player: PlayerSnapshot | None, day: int) -> dict[str, Any]:
+def _round_card(
+    player: PlayerSnapshot | None,
+    day: int,
+    *,
+    pick_day_score: int | None = None,
+) -> dict[str, Any]:
     if player is None:
         return {"holes": [], "holeTypes": [], "out": 0, "in": 0, "total": 0, "toPar": 0}
     round_data = player.rounds.get(day)
     if round_data is None:
+        # Weekend placeholder for penalty players (synthetic daily to-par from carry rules).
+        if (
+            pick_day_score is not None
+            and is_penalty_status(player.status)
+            and day >= 3
+        ):
+            return {
+                "holes": [],
+                "holeTypes": [],
+                "out": 0,
+                "in": 0,
+                "total": 0,
+                "toPar": int(pick_day_score),
+            }
         return {"holes": [], "holeTypes": [], "out": 0, "in": 0, "total": 0, "toPar": 0}
     holes = sorted(round_data.holes, key=lambda h: h.hole_number)
     scores = [hole.strokes for hole in holes]
@@ -398,6 +451,10 @@ def _streak_bonus(player: PlayerSnapshot) -> int:
 def _carry_forward_score(player: PlayerSnapshot) -> int | None:
     if not is_penalty_status(player.status):
         return None
+    if _is_missed_cut_penalty(player.status or ""):
+        mc = _mc_floored_avg_pre_cut_to_par(player)
+        if mc is not None:
+            return mc
     if player.total_to_par is not None:
         return int(player.total_to_par)
     if not player.rounds:
