@@ -10,6 +10,8 @@ from app.models import HoleResult, PlayerSnapshot
 
 QUALIFYING_STREAK_TYPES = {"BIRDIE", "EAGLE", "ACE"}
 DAY_TO_ROUND = {1: 1, 2: 2, 3: 3, 4: 4}
+# Rounds 2–4 = Fri–Sun; Thursday (round 1) excluded from pool-only side bets.
+POOL_ONLY_SIDE_ROUNDS: frozenset[int] = frozenset({2, 3, 4})
 MAIN_EVENT_BUY_IN = 25
 SIDE_BET_MULTIPLIER = 5
 EAGLE_BONUS_DOLLARS = 10 * SIDE_BET_MULTIPLIER
@@ -77,6 +79,9 @@ class ParticipantResult:
     net_payout: float
     tiebreak_prediction: int
     tiebreak_diff: int | None = None
+    eagle_bonus_pool_only: int = 0
+    ace_bonus_pool_only: int = 0
+    streak_bonus_pool_only: int = 0
 
 
 def is_penalty_status(status_blob: str) -> bool:
@@ -190,6 +195,9 @@ def score_participants(
             counted_ids_by_day[day] = {player_id for _, player_id in scored_picks}
             daily_scores[day] = sum(score for score, _ in scored_picks) if scored_picks else 0
 
+        eagle_pool = 0
+        ace_pool = 0
+        streak_pool = 0
         for player_id in participant.picks:
             player = snapshots.get(player_id)
             if player is None:
@@ -197,6 +205,11 @@ def score_participants(
             eagle_total += _count_score_types(player, {"EAGLE"}) * EAGLE_BONUS_DOLLARS
             ace_total += _count_score_types(player, {"ACE"}) * ACE_BONUS_DOLLARS
             streak_total += _streak_bonus(player)
+            eagle_pool += (
+                _count_score_types_in_rounds(player, {"EAGLE"}, rounds=POOL_ONLY_SIDE_ROUNDS) * EAGLE_BONUS_DOLLARS
+            )
+            ace_pool += _count_score_types_in_rounds(player, {"ACE"}, rounds=POOL_ONLY_SIDE_ROUNDS) * ACE_BONUS_DOLLARS
+            streak_pool += _streak_bonus_in_rounds(player, rounds=POOL_ONLY_SIDE_ROUNDS)
 
         event_score = sum(daily_scores.values())
         holes_remaining_by_day = {
@@ -224,6 +237,9 @@ def score_participants(
             main_event_payout=0,
             net_payout=0.0,
             tiebreak_prediction=participant.predicted_winning_to_par,
+            eagle_bonus_pool_only=eagle_pool,
+            ace_bonus_pool_only=ace_pool,
+            streak_bonus_pool_only=streak_pool,
         )
         if winning_to_par is not None:
             result.tiebreak_diff = abs(participant.predicted_winning_to_par - winning_to_par)
@@ -256,11 +272,22 @@ def score_participants(
         for result in results
     ]
     side_nets = _compute_side_nets(side_totals)
+    side_totals_pool_only = [
+        result.eagle_bonus_pool_only + result.ace_bonus_pool_only + result.streak_bonus_pool_only
+        for result in results
+    ]
+    side_nets_pool_only = _compute_side_nets(side_totals_pool_only)
     for idx, result in enumerate(results):
         side_net = side_nets[idx] if idx < len(side_nets) else 0.0
         result.net_payout = round(side_net, 2)
     leaderboard = []
     for idx, result in enumerate(results, start=1):
+        i = idx - 1
+        pool_only_net = (
+            round(side_nets_pool_only[i], 2) if i < len(side_nets_pool_only) else 0.0
+        )
+        pool_only_event = sum(result.daily_scores.get(d, 0) for d in (2, 3, 4))
+        pool_only_daily_winner_days = [d for d in result.daily_winner_days if d >= 2]
         leaderboard.append(
             {
                 "rank": idx,
@@ -278,6 +305,13 @@ def score_participants(
                 "netPayoutDollars": result.net_payout,
                 "predictedWinningToPar": result.tiebreak_prediction,
                 "tiebreakDiff": result.tiebreak_diff,
+                "poolOnlyEventScore": pool_only_event,
+                "poolOnlyDailyWinnerDays": pool_only_daily_winner_days,
+                "eagleBonusDollarsPoolOnly": result.eagle_bonus_pool_only,
+                "aceBonusDollarsPoolOnly": result.ace_bonus_pool_only,
+                "birdieStreakBonusDollarsPoolOnly": result.streak_bonus_pool_only,
+                "dailyWinnerBonusDollarsPoolOnly": 0,
+                "netPayoutDollarsPoolOnly": pool_only_net,
             }
         )
 
@@ -431,9 +465,37 @@ def _count_score_types(player: PlayerSnapshot, score_types: set[str]) -> int:
     return total
 
 
+def _count_score_types_in_rounds(player: PlayerSnapshot, score_types: set[str], *, rounds: frozenset[int]) -> int:
+    total = 0
+    for round_number, round_data in player.rounds.items():
+        if round_number not in rounds:
+            continue
+        for hole in round_data.holes:
+            if hole.score_type in score_types:
+                total += 1
+    return total
+
+
 def _streak_bonus(player: PlayerSnapshot) -> int:
     payout = 0
     for round_number in sorted(player.rounds.keys()):
+        streak = 0
+        holes: list[HoleResult] = sorted(player.rounds[round_number].holes, key=lambda h: h.hole_number)
+        for hole in holes:
+            if hole.score_type in QUALIFYING_STREAK_TYPES:
+                streak += 1
+                if streak >= 3:
+                    payout += STREAK_BONUS_DOLLARS
+            else:
+                streak = 0
+    return payout
+
+
+def _streak_bonus_in_rounds(player: PlayerSnapshot, *, rounds: frozenset[int]) -> int:
+    payout = 0
+    for round_number in sorted(player.rounds.keys()):
+        if round_number not in rounds:
+            continue
         streak = 0
         holes: list[HoleResult] = sorted(player.rounds[round_number].holes, key=lambda h: h.hole_number)
         for hole in holes:

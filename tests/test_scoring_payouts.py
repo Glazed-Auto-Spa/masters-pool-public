@@ -209,6 +209,44 @@ class TestScoringPayouts(unittest.TestCase):
         self.assertEqual(by_name["B"]["holesRemaining"], 126)
         self.assertEqual(by_name["B"]["holesRemainingByDay"], {1: 126, 2: 126, 3: 126, 4: 126})
 
+    def test_pool_only_side_bonuses_exclude_thursday_round(self) -> None:
+        from app.scoring import EAGLE_BONUS_DOLLARS
+
+        config = PoolConfig(
+            event_id="evt",
+            poll_interval_seconds_live=300,
+            poll_interval_seconds_idle=1800,
+            timezone="America/New_York",
+            humor_mode="dry",
+            poll_api_token=None,
+            participants=[
+                ParticipantConfig(name="Solo", predicted_winning_to_par=-10, picks=[99] * 8),
+            ],
+        )
+        snapshots = {
+            99: PlayerSnapshot(
+                player_id=99,
+                player_name="EagleR1Only",
+                status="OK",
+                rounds={
+                    1: PlayerRound(
+                        1,
+                        -2,
+                        [HoleResult(1, 1, "EAGLE", 2, 4)]
+                        + [HoleResult(1, h, "PAR", 4, 4) for h in range(2, 19)],
+                    ),
+                    2: PlayerRound(2, 0, [HoleResult(2, h, "PAR", 4, 4) for h in range(1, 19)]),
+                },
+                total_to_par=-2,
+            )
+        }
+        scored = score_participants(config=config, snapshots=snapshots, winning_to_par=-10)
+        row = scored["leaderboard"][0]
+        self.assertEqual(row["eagleBonusDollars"], 8 * EAGLE_BONUS_DOLLARS)
+        self.assertEqual(row["eagleBonusDollarsPoolOnly"], 0)
+        self.assertEqual(row["dailyWinnerBonusDollarsPoolOnly"], 0)
+        self.assertNotIn(1, row.get("poolOnlyDailyWinnerDays", []))
+
 
 if __name__ == "__main__":
     unittest.main()

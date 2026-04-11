@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412p') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412q') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -582,6 +582,82 @@
           </div>
         </div>
       </section>
+
+      <div class="pool-only-charts-wrap">
+        <h2 class="pool-only-charts-title">For this pool only</h2>
+        <p class="pool-only-charts-note">
+          Side games on <strong>Thursday (day one)</strong> are not included. <strong>Daily winner</strong> payouts are handled
+          separately each day and are <strong>not</strong> shown here. Eagles, aces, and birdie streaks count only
+          <strong>Friday through Sunday</strong> (rounds 2–4). The <strong>Total</strong> column in the first table is only
+          Fri + Sat + Sun team scores (Thursday excluded).
+        </p>
+        <section class="mobile-daily-tiebreak-standings pool-only-charts-section" aria-labelledby="pool-only-daily-title">
+          <h3 id="pool-only-daily-title">Daily scores & tiebreaker (pool view)</h3>
+          <p class="mobile-daily-tiebreak-caption">
+            Same order as Live Standings. <strong>Green</strong> = lowest team score that day among Fri–Sun daily winners only
+            (Thursday never highlighted here). Total = Fri + Sat + Sun only.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Participant</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+                <th>Sun</th>
+                <th>Total (Fri–Sun)</th>
+                <th>Tiebreak Pick</th>
+                <th>Tiebreak Diff</th>
+              </tr>
+            </thead>
+            <tbody id="mobile-daily-tiebreak-body-pool-only">
+              {% for row in state.get("leaderboard", []) %}
+              <tr>
+                <td>{{ row.name }}</td>
+                {% set pwd = row.get("poolOnlyDailyWinnerDays") or [] %}
+                <td>{{ to_par(row.dailyScores.get("1", row.dailyScores.get(1, 0))) }}</td>
+                <td class="{{ 'daily-winner-cell' if 2 in pwd else '' }}">{{ to_par(row.dailyScores.get("2", row.dailyScores.get(2, 0))) }}</td>
+                <td class="{{ 'daily-winner-cell' if 3 in pwd else '' }}">{{ to_par(row.dailyScores.get("3", row.dailyScores.get(3, 0))) }}</td>
+                <td class="{{ 'daily-winner-cell' if 4 in pwd else '' }}">{{ to_par(row.dailyScores.get("4", row.dailyScores.get(4, 0))) }}</td>
+                <td>
+                  <strong>{{ to_par(row.get("poolOnlyEventScore", row.eventScore)) }}</strong>
+                </td>
+                <td>{{ to_par(row.predictedWinningToPar) }}</td>
+                <td>{{ row.tiebreakDiff if row.tiebreakDiff is not none else "-" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+        <section class="mobile-sidegame-standings pool-only-charts-section" aria-labelledby="pool-only-side-title">
+          <h3 id="pool-only-side-title">Side game standings (pool view)</h3>
+          <p class="mobile-daily-tiebreak-caption">Eagles, aces, and streaks: rounds 2–4 only. Daily column is always $0 here.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Participant</th>
+                <th>Eagles</th>
+                <th>Aces</th>
+                <th>Streaks</th>
+                <th>Daily</th>
+                <th>Side Net</th>
+              </tr>
+            </thead>
+            <tbody id="mobile-sidegames-body-pool-only">
+              {% for row in state.get("leaderboard", []) %}
+              <tr>
+                <td>{{ row.name }}</td>
+                <td>${{ row.get("eagleBonusDollarsPoolOnly", 0) }}</td>
+                <td>${{ row.get("aceBonusDollarsPoolOnly", 0) }}</td>
+                <td>${{ row.get("birdieStreakBonusDollarsPoolOnly", 0) }}</td>
+                <td>$0</td>
+                <td><strong>${{ '%.2f'|format(row.get("netPayoutDollarsPoolOnly", 0)) }}</strong></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </div>
     </main>
 
     <script>
@@ -1108,7 +1184,12 @@
       }
 
       function renderMobileDailyTiebreakStandings(rows) {
-        const body = document.getElementById("mobile-daily-tiebreak-body");
+        fillMobileDailyTiebreakBody("mobile-daily-tiebreak-body", rows, false);
+        fillMobileDailyTiebreakBody("mobile-daily-tiebreak-body-pool-only", rows, true);
+      }
+
+      function fillMobileDailyTiebreakBody(bodyId, rows, poolOnly) {
+        const body = document.getElementById(bodyId);
         if (!body) return;
         body.innerHTML = "";
         if (!rows.length) {
@@ -1117,15 +1198,21 @@
         }
         for (const row of rows) {
           const tr = document.createElement("tr");
-          const dayWins = new Set((row.dailyWinnerDays || []).map((v) => Number(v)));
+          const winDays = poolOnly ? row.poolOnlyDailyWinnerDays || [] : row.dailyWinnerDays || [];
+          const dayWins = new Set(winDays.map((v) => Number(v)));
           const dayClass = (day) => (dayWins.has(day) ? "daily-winner-cell" : "");
+          const totalDisplay = poolOnly
+            ? (row.poolOnlyEventScore !== undefined && row.poolOnlyEventScore !== null
+                ? row.poolOnlyEventScore
+                : [2, 3, 4].reduce((s, d) => s + Number(getDailyScore(row.dailyScores || {}, d) || 0), 0))
+            : row.eventScore;
           tr.innerHTML = `
             <td>${row.name}</td>
-            <td class="${dayClass(1)}">${formatToPar(getDailyScore(row.dailyScores || {}, 1))}</td>
+            <td class="${poolOnly ? "" : dayClass(1)}">${formatToPar(getDailyScore(row.dailyScores || {}, 1))}</td>
             <td class="${dayClass(2)}">${formatToPar(getDailyScore(row.dailyScores || {}, 2))}</td>
             <td class="${dayClass(3)}">${formatToPar(getDailyScore(row.dailyScores || {}, 3))}</td>
             <td class="${dayClass(4)}">${formatToPar(getDailyScore(row.dailyScores || {}, 4))}</td>
-            <td><strong>${formatToPar(row.eventScore)}</strong></td>
+            <td><strong>${formatToPar(totalDisplay)}</strong></td>
             <td>${formatToPar(row.predictedWinningToPar)}</td>
             <td>${row.tiebreakDiff ?? "-"}</td>
           `;
@@ -1134,7 +1221,12 @@
       }
 
       function renderMobileSidegameStandings(rows) {
-        const body = document.getElementById("mobile-sidegames-body");
+        fillMobileSidegameBody("mobile-sidegames-body", rows, false);
+        fillMobileSidegameBody("mobile-sidegames-body-pool-only", rows, true);
+      }
+
+      function fillMobileSidegameBody(bodyId, rows, poolOnly) {
+        const body = document.getElementById(bodyId);
         if (!body) return;
         body.innerHTML = "";
         if (!rows.length) {
@@ -1143,13 +1235,18 @@
         }
         for (const row of rows) {
           const tr = document.createElement("tr");
+          const e = poolOnly ? row.eagleBonusDollarsPoolOnly ?? 0 : row.eagleBonusDollars || 0;
+          const a = poolOnly ? row.aceBonusDollarsPoolOnly ?? 0 : row.aceBonusDollars || 0;
+          const s = poolOnly ? row.birdieStreakBonusDollarsPoolOnly ?? 0 : row.birdieStreakBonusDollars || 0;
+          const d = poolOnly ? 0 : row.dailyWinnerBonusDollars || 0;
+          const net = poolOnly ? row.netPayoutDollarsPoolOnly : row.netPayoutDollars;
           tr.innerHTML = `
             <td>${row.name}</td>
-            <td>$${row.eagleBonusDollars || 0}</td>
-            <td>$${row.aceBonusDollars || 0}</td>
-            <td>$${row.birdieStreakBonusDollars || 0}</td>
-            <td>$${row.dailyWinnerBonusDollars || 0}</td>
-            <td><strong>${row.netPayoutDollars === null || row.netPayoutDollars === undefined ? "--" : `$${formatCurrency(row.netPayoutDollars)}`}</strong></td>
+            <td>$${e}</td>
+            <td>$${a}</td>
+            <td>$${s}</td>
+            <td>$${d}</td>
+            <td><strong>${net === null || net === undefined ? "--" : `$${formatCurrency(net)}`}</strong></td>
           `;
           body.appendChild(tr);
         }
