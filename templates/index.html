@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412g') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412h') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -279,7 +279,7 @@
           </tbody>
         </table>
         </div>
-        <p class="standings-footnote" id="standings-weekend-footnote">
+        <p class="standings-footnote standings-footnote--desktop-only" id="standings-weekend-footnote">
           <span class="standings-col-asterisk" aria-hidden="true">*</span>
           <strong>Saturday and Sunday.</strong>
           For picks no longer in the field (missed cut, withdrawal, disqualification, and similar), these columns still count toward the team daily total.
@@ -298,11 +298,11 @@
               <th>Participant</th>
               <th>Thu</th>
               <th>Fri</th>
-              <th aria-describedby="standings-weekend-footnote">
-                Sat<span class="standings-col-asterisk" aria-hidden="true">*</span>
+              <th aria-describedby="standings-weekend-footnote-mobile">
+                Sat<span class="standings-col-asterisk standings-col-asterisk--tight" aria-hidden="true">*</span>
               </th>
-              <th aria-describedby="standings-weekend-footnote">
-                Sun<span class="standings-col-asterisk" aria-hidden="true">*</span>
+              <th aria-describedby="standings-weekend-footnote-mobile">
+                Sun<span class="standings-col-asterisk standings-col-asterisk--tight" aria-hidden="true">*</span>
               </th>
               <th>Total</th>
               <th>Tiebreak Pick</th>
@@ -325,6 +325,12 @@
             {% endfor %}
           </tbody>
         </table>
+        <p class="standings-footnote standings-footnote--mobile-daily-only" id="standings-weekend-footnote-mobile">
+          <span class="standings-col-asterisk" aria-hidden="true">*</span>
+          <strong>Saturday and Sunday.</strong>
+          For picks no longer in the field (missed cut, withdrawal, disqualification, and similar), these columns still count toward the team daily total.
+          Their Saturday and Sunday values use the <strong>Thursday/Friday average to par</strong> carry already applied in the live feed, so each day remains a full eight-pick sum.
+        </p>
       </section>
 
       <section class="mobile-sidegame-standings">

@@ -3403,6 +3403,10 @@ body.skin-masters-v7 {
   vertical-align: 0.06em;
 }
 
+.skin-masters-v7 .mobile-daily-tiebreak-standings thead th .standings-col-asterisk--tight {
+  margin-left: 0;
+}
+
 .skin-masters-v7 .standings-footnote {
   margin: 10px 0 0;
   padding: 9px 12px;
@@ -3424,6 +3428,10 @@ body.skin-masters-v7 {
 
 .skin-masters-v7 .standings-footnote strong {
   color: #2f4956;
+}
+
+.skin-masters-v7 .standings-footnote--mobile-daily-only {
+  display: none;
 }
 
 .skin-masters-v7 .payout-settlement {
@@ -3814,7 +3822,7 @@ body.skin-masters-v7 {
   }
 
   .skin-masters-v7 .standings-table-scroll #standings {
-    min-width: 46rem;
+    min-width: 0;
   }
 
   .skin-masters-v7 #standings {
@@ -3942,20 +3950,18 @@ body.skin-masters-v7 {
     color: #5a7382;
   }
 
-  /* Mobile: keep Thu–Sun, Total, tiebreaker cols + daily-winner highlighting; hide dollar columns (shown under Side Game Standings). */
-  .skin-masters-v7 #standings th:nth-child(10),
-  .skin-masters-v7 #standings th:nth-child(11),
-  .skin-masters-v7 #standings th:nth-child(12),
-  .skin-masters-v7 #standings th:nth-child(13),
-  .skin-masters-v7 #standings th:nth-child(14),
-  .skin-masters-v7 #standings th:nth-child(15),
-  .skin-masters-v7 #standings td:nth-child(10),
-  .skin-masters-v7 #standings td:nth-child(11),
-  .skin-masters-v7 #standings td:nth-child(12),
-  .skin-masters-v7 #standings td:nth-child(13),
-  .skin-masters-v7 #standings td:nth-child(14),
-  .skin-masters-v7 #standings td:nth-child(15) {
+  /* Mobile: Live Standings shows rank / holes / move / name only; daily + tiebreaker + $ cols are in the charts below. */
+  .skin-masters-v7 #standings th:nth-child(n + 5),
+  .skin-masters-v7 #standings td:nth-child(n + 5) {
     display: none;
+  }
+
+  .skin-masters-v7 .standings-footnote--desktop-only {
+    display: none;
+  }
+
+  .skin-masters-v7 .standings-footnote--mobile-daily-only {
+    display: block;
   }
 
   .skin-masters-v7 .mobile-sidegame-standings,
