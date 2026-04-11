@@ -3265,7 +3265,8 @@ tbody tr:hover {
   font-weight: 700;
 }
 
-.skin-masters-v7 .payout-settlement-sans-details {
+.skin-masters-v7 .payout-settlement-sans-details,
+.skin-masters-v7 .payout-settlement-main-details {
   margin-top: 8px;
   border: 1px solid #c9d6de;
   border-radius: 10px;
@@ -3273,15 +3274,18 @@ tbody tr:hover {
   overflow: hidden;
 }
 
-.skin-masters-v7 .payout-settlement-sans-details > summary {
+.skin-masters-v7 .payout-settlement-sans-details > summary,
+.skin-masters-v7 .payout-settlement-main-details > summary {
   list-style: none;
 }
 
-.skin-masters-v7 .payout-settlement-sans-details > summary::-webkit-details-marker {
+.skin-masters-v7 .payout-settlement-sans-details > summary::-webkit-details-marker,
+.skin-masters-v7 .payout-settlement-main-details > summary::-webkit-details-marker {
   display: none;
 }
 
-.skin-masters-v7 .payout-settlement-sans-details-summary {
+.skin-masters-v7 .payout-settlement-sans-details-summary,
+.skin-masters-v7 .payout-settlement-main-details-summary {
   display: flex;
   align-items: center;
   padding: 10px 14px;
@@ -3292,17 +3296,20 @@ tbody tr:hover {
   user-select: none;
 }
 
-.skin-masters-v7 .payout-settlement-sans-details-summary:hover {
+.skin-masters-v7 .payout-settlement-sans-details-summary:hover,
+.skin-masters-v7 .payout-settlement-main-details-summary:hover {
   background: #eaf0f4;
 }
 
-.skin-masters-v7 .payout-settlement-sans-details-summary-text {
+.skin-masters-v7 .payout-settlement-sans-details-summary-text,
+.skin-masters-v7 .payout-settlement-main-details-summary-text {
   display: inline-flex;
   align-items: center;
   gap: 10px;
 }
 
-.skin-masters-v7 .payout-settlement-sans-details-summary-text::before {
+.skin-masters-v7 .payout-settlement-sans-details-summary-text::before,
+.skin-masters-v7 .payout-settlement-main-details-summary-text::before {
   content: "";
   display: inline-block;
   width: 0.45em;
@@ -3314,17 +3321,26 @@ tbody tr:hover {
   flex-shrink: 0;
 }
 
-.skin-masters-v7 .payout-settlement-sans-details[open] .payout-settlement-sans-details-summary-text::before {
+.skin-masters-v7 .payout-settlement-sans-details[open] .payout-settlement-sans-details-summary-text::before,
+.skin-masters-v7 .payout-settlement-main-details[open] .payout-settlement-main-details-summary-text::before {
   transform: rotate(45deg);
 }
 
-.skin-masters-v7 .payout-settlement-sans-details-body {
+.skin-masters-v7 .payout-settlement-sans-details-body,
+.skin-masters-v7 .payout-settlement-main-details-body {
   padding: 0 14px 16px;
   border-top: 1px solid #dce6eb;
 }
 
-.skin-masters-v7 .payout-settlement-sans-details-body > .payout-disclaimer:first-child {
+.skin-masters-v7 .payout-settlement-sans-details-body > .payout-disclaimer:first-child,
+.skin-masters-v7 .payout-settlement-main-details-body > .payout-disclaimer:first-child {
   margin-top: 12px;
+}
+
+.skin-masters-v7 .payout-venmo-directory--pool-only {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e8d6d6;
 }
 
 .skin-masters-v7 .payout-daily-side-table td.daily-side-winner-final {

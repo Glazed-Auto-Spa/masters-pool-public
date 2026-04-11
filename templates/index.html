@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412w') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412x') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -509,42 +509,100 @@
 
       <section class="payout-settlement" id="payout-settlement" aria-labelledby="payout-settlement-title">
         <h2 id="payout-settlement-title">Payout structure & settlement</h2>
-        <p class="payout-disclaimer">
-          <strong>No buy-ins have been collected and no cash sits in a pot.</strong> Nothing here moves money. This is an
-          informal worksheet from the same numbers as Live Standings. Final settlement is between participants (and any host
-          who collects buy-ins). Numbers update when the feed refreshes; use the payout integrity badge above when the
-          tournament is complete.
+        <details class="payout-settlement-main-details">
+          <summary class="payout-settlement-main-details-summary">
+            <span class="payout-settlement-main-details-summary-text">Show worksheet, transfers &amp; Venmo</span>
+          </summary>
+          <div class="payout-settlement-main-details-body">
+            <p class="payout-disclaimer">
+              <strong>No buy-ins have been collected and no cash sits in a pot.</strong> Nothing here moves money. This is an
+              informal worksheet from the same numbers as Live Standings. Final settlement is between participants (and any host
+              who collects buy-ins). Numbers update when the feed refreshes; use the payout integrity badge above when the
+              tournament is complete.
+            </p>
+            <p class="payout-disclaimer payout-disclaimer--secondary">
+              <strong>How it works:</strong> The leader board&rsquo;s <strong>main event payout</strong> is winner-take-all
+              (full pot to 1st on these standings). <strong>Side Bet Net</strong> is the zero-sum settlement for Eagles, Aces,
+              Streaks, and Daily winners. <strong>Total out</strong> is main + side net (gross from the pool to each person if it
+              paid out today). The &ldquo;who pays whom&rdquo; list is a minimal set of transfers that balances everyone once a
+              <strong>$25</strong> buy-in per person is assumed for the math only (buy-ins not collected yet; you may settle
+              differently if everyone agrees).
+            </p>
+            <div class="payout-controls">
+              <label for="payout-focus">Show settlement for</label>
+              <select id="payout-focus">
+                <option value="">Everyone (full list)</option>
+                {% for p in config.participants %}
+                <option value="{{ p.name }}">{{ p.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <p class="payout-live-note">
+              <strong>Live:</strong> Totals, transfers, and breakdown here recalculate whenever pool data reloads (same cadence as
+              <strong>Live Standings</strong> and the refresh countdown in the ribbon).
+            </p>
+            <div id="payout-settlement-output" class="payout-settlement-output" aria-live="polite">
+              <p class="payout-empty">Settlement lines load after the first live standings update.</p>
+            </div>
+            <div class="payout-venmo-directory">
+              <h3 class="payout-venmo-directory-title">Venmo directory</h3>
+              <p class="payout-venmo-note">
+                Tap a handle to open that person on
+                <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">Venmo</a> (web or app) so you can send
+                payment.
+              </p>
+              <div class="payout-venmo-table-wrap">
+                <table class="pick-table payout-venmo-table">
+                  <thead>
+                    <tr>
+                      <th>Participant</th>
+                      <th>Pay on Venmo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for p in config.participants %}
+                    {% set name = p.name %}
+                    {% set entry = venmo_directory.get(name) or venmo_directory.get((name.split(" ") | first)) %}
+                    {% set raw = ((p.venmo_handle or "") | trim) or ((entry.get("venmo_handle", "") if entry else "") | trim) %}
+                    {% set h = ((raw[1:]) if raw and raw[0:1] == "@" else raw) | trim %}
+                    {% if h %}
+                    {% set venmo_app = "venmo://paycharge?txn=pay&recipients=" ~ (h | urlencode) ~ "&note=" ~ ("Masters pool" | urlencode) %}
+                    <tr>
+                      <td>{{ name }}</td>
+                      <td>
+                        <a
+                          class="payout-venmo-pay"
+                          href="https://venmo.com/{{ h }}"
+                          data-venmo-app="{{ venmo_app }}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          >@{{ h }}</a
+                        >
+                      </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <div class="pool-only-charts-wrap" id="payout-pool-only-wrap">
+        <h2 class="pool-only-charts-title">For this pool only</h2>
+        <p class="pool-only-charts-note">
+          The three tables below match the payout worksheets, but <strong>Thursday (round 1) side-game scoring</strong> is omitted
+          for eagles, aces, and streaks (Friday–Sunday only). The <strong>Daily</strong> column is <strong>$0</strong> here because
+          daily winner money is settled <strong>off-sheet each day</strong> (see the third table). All other sections of this site
+          still use the full rules (all rounds and pooled daily bonuses).
         </p>
-        <p class="payout-disclaimer payout-disclaimer--secondary">
-          <strong>How it works:</strong> The leader board&rsquo;s <strong>main event payout</strong> is winner-take-all
-          (full pot to 1st on these standings). <strong>Side Bet Net</strong> is the zero-sum settlement for Eagles, Aces,
-          Streaks, and Daily winners. <strong>Total out</strong> is main + side net (gross from the pool to each person if it
-          paid out today). The &ldquo;who pays whom&rdquo; list is a minimal set of transfers that balances everyone once a
-          <strong>$25</strong> buy-in per person is assumed for the math only (buy-ins not collected yet; you may settle
-          differently if everyone agrees).
-        </p>
-        <div class="payout-controls">
-          <label for="payout-focus">Show settlement for</label>
-          <select id="payout-focus">
-            <option value="">Everyone (full list)</option>
-            {% for p in config.participants %}
-            <option value="{{ p.name }}">{{ p.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <p class="payout-live-note">
-          <strong>Live:</strong> Totals, transfers, and breakdown here recalculate whenever pool data reloads (same cadence as
-          <strong>Live Standings</strong> and the refresh countdown in the ribbon).
-        </p>
-        <div id="payout-settlement-output" class="payout-settlement-output" aria-live="polite">
-          <p class="payout-empty">Settlement lines load after the first live standings update.</p>
-        </div>
-        <div class="payout-venmo-directory">
+        <div id="payout-pool-only-charts" class="payout-pool-only-charts-inner" aria-live="polite"></div>
+        <div class="payout-venmo-directory payout-venmo-directory--pool-only">
           <h3 class="payout-venmo-directory-title">Venmo directory</h3>
           <p class="payout-venmo-note">
-            Tap a handle to open that person on
-            <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">Venmo</a> (web or app) so you can send
-            payment.
+            Same handles as the main payout section — use when settling the pool-only lines above.
           </p>
           <div class="payout-venmo-table-wrap">
             <table class="pick-table payout-venmo-table">
@@ -581,17 +639,6 @@
             </table>
           </div>
         </div>
-      </section>
-
-      <div class="pool-only-charts-wrap" id="payout-pool-only-wrap">
-        <h2 class="pool-only-charts-title">For this pool only</h2>
-        <p class="pool-only-charts-note">
-          The three tables below match the payout worksheets, but <strong>Thursday (round 1) side-game scoring</strong> is omitted
-          for eagles, aces, and streaks (Friday–Sunday only). The <strong>Daily</strong> column is <strong>$0</strong> here because
-          daily winner money is settled <strong>off-sheet each day</strong> (see the third table). All other sections of this site
-          still use the full rules (all rounds and pooled daily bonuses).
-        </p>
-        <div id="payout-pool-only-charts" class="payout-pool-only-charts-inner" aria-live="polite"></div>
       </div>
 
       {% set participant_names = config.participants | map(attribute="name") | list %}
@@ -2020,7 +2067,7 @@
           renderPayoutSettlementSansAlfredo();
         });
       }
-      document.querySelectorAll(".payout-settlement").forEach((payoutVenmoSection) => {
+      document.querySelectorAll(".payout-settlement, #payout-pool-only-wrap").forEach((payoutVenmoSection) => {
         payoutVenmoSection.addEventListener("click", (e) => {
           const a = e.target.closest("a.payout-venmo-pay");
           if (!a) return;
