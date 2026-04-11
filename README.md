@@ -15,7 +15,8 @@ Standalone Masters pool scorer with:
 - each day (Thu-Sun), **all 8 daily scores** count
 - event total is sum of Thu/Fri/Sat/Sun team scores
 - lowest event total wins
-- missed cut or WD = golfer's cumulative score-to-date is reused for each unplayed day
+- **missed cut:** Saturday and Sunday each use the **average** of Thursday and Friday score-to-par, **rounded down** (`floor`) to an integer (e.g. +5 and +7 → +6 per weekend day; +5 and +6 → +5 each). If only a combined total exists (no per-round rows), `floor(total / 2)` is used for each weekend day.
+- **WD/DQ:** golfer's cumulative score-to-date is reused for each unplayed day (unchanged).
 - eagle bonus = **$50 each**
 - ace bonus = **$100 each**
 - birdie streak bonus:
