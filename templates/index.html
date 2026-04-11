@@ -316,8 +316,11 @@
               <li>Daily total = sum of all pick scores for that day (Thu/Fri/Sat/Sun).</li>
               <li>Event total = Thu + Fri + Sat + Sun (lowest total wins).</li>
               <li>
-                If a player misses the cut or withdraws, and no new round data is available, the app carries their cumulative to-par
-                at stop time into each remaining day.
+                <strong>Missed cut, WD, or DQ:</strong> Thursday and Friday use that golfer&rsquo;s live scores to par (rounds 1–2).
+                <strong>Saturday and Sunday</strong> still count the pick: each weekend day is the <strong>floor of the average</strong> of
+                Thursday and Friday to par (for example +5 and +7 → +6 on both Sat and Sun; +5 and +5 → +5 each). If only a combined
+                36-hole total exists with no per-round split, each weekend day uses half that total rounded down. The pool ignores
+                placeholder weekend rows from the feed for these players so the average rule always applies.
               </li>
             </ul>
           </article>
