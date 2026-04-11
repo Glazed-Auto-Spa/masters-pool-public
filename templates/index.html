@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412d') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412e') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -472,12 +472,11 @@
           tournament is complete.
         </p>
         <p class="payout-disclaimer payout-disclaimer--secondary">
-          <strong>How it works:</strong> The sheet still assumes each person will pay the
-          <strong>$25</strong> main buy-in so the full main pot can be paid out. The leader board&rsquo;s
-          <strong>main event payout</strong> is winner-take-all (full pot to 1st on these standings).
-          <strong>Side Bet Net</strong> is the zero-sum settlement for Eagles, Aces, Streaks, and Daily winners. Your
-          <strong>net position</strong> is main + side net &minus; that $25 (so the main prize is included before the buy-in
-          is netted out). The &ldquo;who pays whom&rdquo; list clears those positions in the fewest transfers (you may settle
+          <strong>How it works:</strong> The leader board&rsquo;s <strong>main event payout</strong> is winner-take-all
+          (full pot to 1st on these standings). <strong>Side Bet Net</strong> is the zero-sum settlement for Eagles, Aces,
+          Streaks, and Daily winners. <strong>Total out</strong> is main + side net (gross from the pool to each person if it
+          paid out today). The &ldquo;who pays whom&rdquo; list is a minimal set of transfers that balances everyone once a
+          <strong>$25</strong> buy-in per person is assumed for the math only (buy-ins not collected yet; you may settle
           differently if everyone agrees).
         </p>
         <div class="payout-controls">
@@ -907,7 +906,6 @@
           return;
         }
         const positions = computePayoutPositions(rows);
-        const sumPos = Math.round(positions.reduce((s, p) => s + p.position, 0) * 100) / 100;
         const transfers = minimizeSettlementTransfers(positions);
         const pot = POOL_SIZE * POOL_BUY_IN;
         let html = "";
@@ -946,13 +944,12 @@
               <td class="payout-num">${formatMoneyPayout(p.daily)}</td>
               <td class="payout-num">${formatMoneyPayout(p.net)}</td>
               <td class="payout-num payout-num--emph">${formatMoneyPayout(p.total)}</td>
-              <td class="payout-num ${p.position >= 0 ? "payout-positive" : "payout-negative"}">${formatMoneyPayout(p.position)}</td>
             </tr>`;
           })
           .join("");
 
         html += `<h3 class="payout-subhead">Per-participant totals</h3>
-          <p class="payout-table-note">Columns: main event payout (full pot to 1st on these standings), raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Side Bet Net</strong> (after zero-sum split), <strong>Total if pool paid out</strong> (main + side net), then <strong>Net vs $25 buy-in</strong> (positive = owed to you once everyone&rsquo;s buy-in is in the pool). No cash has been collected yet. Use the <strong>Venmo directory</strong> below for payee phones.</p>
+          <p class="payout-table-note">Columns: main event payout (full pot to 1st on these standings), raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Side Bet Net</strong> (after zero-sum split), <strong>Total if pool paid out</strong> (main + side net). No buy-ins collected yet. Use the <strong>Venmo directory</strong> below for payee phones.</p>
           <div class="payout-table-scroll">
           <table class="pick-table payout-breakdown-table">
             <thead><tr>
@@ -964,13 +961,9 @@
               <th>Daily</th>
               <th>Side net</th>
               <th>Total out</th>
-              <th title="Main event + side net, minus $25 buy-in (buy-in not collected yet; worksheet assumes it will be)">Net vs $25</th>
             </tr></thead>
             <tbody>${breakdownRows}</tbody>
-          </table></div>
-          <p class="payout-sumcheck">Check: if every <strong>${formatMoneyPayout(
-            POOL_BUY_IN,
-          )}</strong> buy-in is counted the same way, the column &ldquo;Net vs $25&rdquo; sums to <strong>$0</strong> — currently <strong>${formatMoneyPayout(sumPos)}</strong>.</p>`;
+          </table></div>`;
 
         let xferRows = transfers
           .map((t) => {
@@ -985,7 +978,7 @@
 
         if (!xferRows) {
           xferRows =
-            "<tr><td colspan=\"4\" class=\"payout-empty-row\">No payment chain needed — every net vs buy-in rounds to $0.</td></tr>";
+            "<tr><td colspan=\"4\" class=\"payout-empty-row\">No payment chain needed — amounts net to $0 under the worksheet rules.</td></tr>";
         }
 
         if (focus) {
@@ -1003,7 +996,7 @@
             .join("");
           if (!xferRows) {
             xferRows =
-              "<tr><td colspan=\"4\" class=\"payout-empty-row\">No direct transfers list for you in this minimal settlement (your net vs buy-in may be $0).</td></tr>";
+              "<tr><td colspan=\"4\" class=\"payout-empty-row\">No direct transfers list for you in this minimal settlement.</td></tr>";
           }
         }
 
@@ -1031,7 +1024,6 @@
                 <li><strong>Side gross</strong> — Eagles ${formatMoneyPayout(me.eagle)}, Aces ${formatMoneyPayout(me.ace)}, Streaks ${formatMoneyPayout(me.streak)}, Daily ${formatMoneyPayout(me.daily)}</li>
                 <li><strong>Side Bet Net (after pool split):</strong> ${formatMoneyPayout(me.net)}</li>
                 <li><strong>Total if the pool paid you (main + side net):</strong> ${formatMoneyPayout(me.total)}</li>
-                <li><strong>After your ${formatMoneyPayout(POOL_BUY_IN)} buy-in (not collected yet):</strong> <span class="${me.position >= 0 ? "payout-positive" : "payout-negative"}">${formatMoneyPayout(me.position)}</span> (${me.position >= 0 ? "others owe you this on net once buy-ins are in" : "you owe others this on net once buy-ins are in"})</li>
               </ul></div>`;
           }
         }
