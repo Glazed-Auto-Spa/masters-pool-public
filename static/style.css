@@ -3245,6 +3245,24 @@ tbody tr:hover {
   margin-top: 8px;
 }
 
+.skin-masters-v7 .payout-settlement--sans-alfredo {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 2px solid #dfe7ec;
+}
+
+.skin-masters-v7 .payout-settlement-sans-title {
+  margin: 0 0 10px;
+  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+  font-family: "Libre Baskerville", ui-serif, Georgia, serif;
+  color: #b42318;
+  font-weight: 700;
+}
+
+.skin-masters-v7 .payout-settlement-sans-paren {
+  font-weight: 700;
+}
+
 .skin-masters-v7 .payout-daily-side-table td.daily-side-winner-final {
   background: linear-gradient(180deg, #d8f5e4, #c5edd6);
   color: #0b3d22;

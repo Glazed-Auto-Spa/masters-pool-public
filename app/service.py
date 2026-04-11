@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,7 @@ from app.espn_client import (
     map_player_tee_times_phoenix_current_period,
     merge_player_statuses_with_core,
 )
+from app.models import PlayerSnapshot
 from app.scoring import is_penalty_status, score_participants
 from app.state_store import STATE_SCHEMA_VERSION, StateStore, create_state_store
 from app.storage import snapshot_to_dict
@@ -92,6 +94,18 @@ class PoolService:
                 for row in state.get("leaderboard", []):
                     row["mainEventPayoutDollars"] = None
                     row["netPayoutDollars"] = None
+
+            sans_bundle = _maybe_score_sans_alfredo(
+                config=self.config,
+                snapshots=snapshots,
+                winning_to_par=winning_to_par,
+            )
+            if sans_bundle is not None:
+                state["leaderboardSansAlfredo"] = sans_bundle["leaderboard"]
+                state["participantDetailsSansAlfredo"] = sans_bundle["participantDetails"]
+                state["payoutIntegrityOkSansAlfredo"] = sans_bundle["payoutIntegrityOkSansAlfredo"]
+                state["payoutIntegrityReasonSansAlfredo"] = sans_bundle["payoutIntegrityReasonSansAlfredo"]
+
             state["playerPulse"] = _build_player_pulse(snapshots)
             _annotate_pick_live_state(
                 participant_details=state.get("participantDetails", []),
@@ -495,6 +509,46 @@ def _through_display(
     if hole >= 18:
         return "F"
     return f"Thru {hole}"
+
+
+def _config_without_participant_by_name(config: PoolConfig, exclude_name: str) -> PoolConfig | None:
+    key = exclude_name.strip().lower()
+    if not key:
+        return None
+    kept = [p for p in config.participants if p.name.strip().lower() != key]
+    if len(kept) == len(config.participants) or not kept:
+        return None
+    return replace(config, participants=kept)
+
+
+def _maybe_score_sans_alfredo(
+    *,
+    config: PoolConfig,
+    snapshots: dict[int, PlayerSnapshot],
+    winning_to_par: int | None,
+) -> dict[str, Any] | None:
+    """
+    Hypothetical standings / payouts as if Alfredo had never entered (one fewer buy-in, no picks).
+    """
+    sans_config = _config_without_participant_by_name(config, "Alfredo")
+    if sans_config is None:
+        return None
+    sans = score_participants(sans_config, snapshots=snapshots, winning_to_par=winning_to_par)
+    lb = sans.get("leaderboard", [])
+    payout_ok, payout_reason = _validate_payout_state(
+        leaderboard=lb,
+        participant_count=len(sans_config.participants),
+    )
+    if not payout_ok:
+        for row in lb:
+            row["mainEventPayoutDollars"] = None
+            row["netPayoutDollars"] = None
+    return {
+        "leaderboard": lb,
+        "participantDetails": sans.get("participantDetails", []),
+        "payoutIntegrityOkSansAlfredo": payout_ok,
+        "payoutIntegrityReasonSansAlfredo": payout_reason,
+    }
 
 
 def _validate_payout_state(leaderboard: list[dict[str, Any]], participant_count: int) -> tuple[bool, str]:

@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412t') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412u') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -593,6 +593,82 @@
         </p>
         <div id="payout-pool-only-charts" class="payout-pool-only-charts-inner" aria-live="polite"></div>
       </div>
+
+      {% set participant_names = config.participants | map(attribute="name") | list %}
+      {% if "Alfredo" in participant_names %}
+      <section class="payout-settlement payout-settlement--sans-alfredo" id="payout-settlement-sans-alfredo" aria-labelledby="payout-settlement-sans-title">
+        <h2 id="payout-settlement-sans-title" class="payout-settlement-sans-title">
+          Payout structure &amp; settlement <span class="payout-settlement-sans-paren">(excluding Alfredo)</span>
+        </h2>
+        <p class="payout-disclaimer">
+          <strong>Hypothetical worksheet:</strong> Same rules as the main payout block above, but <strong>Alfredo is treated as if he never joined</strong> — his picks and buy-in are removed, the main pot is <strong>{{ (config.participants | length) - 1 }} × $25</strong>, and side games are re-zero-summed across the remaining pool only. Live Standings and all sections above still reflect the real contest.
+        </p>
+        <p class="payout-disclaimer payout-disclaimer--secondary">
+          <strong>How it works:</strong> Winner-take-all main pot to #1 on this smaller leaderboard, side nets for Eagles, Aces, Streaks, and Daily winners across the remaining members, minimal transfers assuming a <strong>$25</strong> buy-in from each person still in this hypothetical pool.
+        </p>
+        <div class="payout-controls">
+          <label for="payout-focus-sans">Show settlement for</label>
+          <select id="payout-focus-sans">
+            <option value="">Everyone (full list)</option>
+            {% for p in config.participants %}
+            {% if p.name != "Alfredo" %}
+            <option value="{{ p.name }}">{{ p.name }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <p class="payout-live-note">
+          <strong>Live:</strong> Recalculates with each pool data refresh (same cadence as the main payout section).
+        </p>
+        <div id="payout-settlement-output-sans" class="payout-settlement-output" aria-live="polite">
+          <p class="payout-empty">Settlement lines load after the first live standings update.</p>
+        </div>
+        <div class="payout-venmo-directory">
+          <h3 class="payout-venmo-directory-title">Venmo directory</h3>
+          <p class="payout-venmo-note">
+            Tap a handle to open that person on
+            <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">Venmo</a> (web or app) so you can send
+            payment.
+          </p>
+          <div class="payout-venmo-table-wrap">
+            <table class="pick-table payout-venmo-table">
+              <thead>
+                <tr>
+                  <th>Participant</th>
+                  <th>Pay on Venmo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in config.participants %}
+                {% if p.name != "Alfredo" %}
+                {% set name = p.name %}
+                {% set entry = venmo_directory.get(name) or venmo_directory.get((name.split(" ") | first)) %}
+                {% set raw = ((p.venmo_handle or "") | trim) or ((entry.get("venmo_handle", "") if entry else "") | trim) %}
+                {% set h = ((raw[1:]) if raw and raw[0:1] == "@" else raw) | trim %}
+                {% if h %}
+                {% set venmo_app = "venmo://paycharge?txn=pay&recipients=" ~ (h | urlencode) ~ "&note=" ~ ("Masters pool" | urlencode) %}
+                <tr>
+                  <td>{{ name }}</td>
+                  <td>
+                    <a
+                      class="payout-venmo-pay"
+                      href="https://venmo.com/{{ h }}"
+                      data-venmo-app="{{ venmo_app }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >@{{ h }}</a
+                    >
+                  </td>
+                </tr>
+                {% endif %}
+                {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      {% endif %}
     </main>
 
     <script>
@@ -604,14 +680,18 @@
       let feedSignature = "";
       let latestFeed = [];
       let latestLeaderboard = [];
+      let latestLeaderboardSansAlfredo = {{ (state.get("leaderboardSansAlfredo") or [])|tojson }};
       let latestParticipants = [];
       let standingsSignature = "";
       let participantsSignature = "";
       let mastersFieldSignature = "";
       const POOL_BUY_IN = 25;
       const POOL_SIZE = {{ config.participants|length }};
+      const SANS_ALFREDO_SECTION_ACTIVE = {{ ("Alfredo" in (config.participants | map(attribute="name") | list))|tojson }};
+      const SANS_ALFREDO_POOL_SIZE = {{ (config.participants | length) - 1 }};
       const DAILY_WINNER_DAY_GROSS = {{ daily_winner_bonus_dollars }};
       let lastPayoutIntegrityOk = true;
+      let lastPayoutIntegrityOkSans = {{ (state.get("payoutIntegrityOkSansAlfredo", True))|tojson }};
       const phxFormatter = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Phoenix",
         year: "numeric",
@@ -1140,22 +1220,16 @@
         mount.innerHTML = html;
       }
 
-      function renderPayoutSettlement(rows) {
-        const out = document.getElementById("payout-settlement-output");
-        if (!out) return;
-        const focus = (document.getElementById("payout-focus") || {}).value || "";
+      function buildPayoutSettlementHtml(rows, focus, poolSize, integrityOk) {
         if (!rows || rows.length === 0) {
-          out.innerHTML =
-            "<p class=\"payout-empty\">Standings are not loaded yet. Settlement lines appear after the first live update.</p>";
-          renderPayoutPoolOnlyCharts([], focus);
-          return;
+          return "<p class=\"payout-empty\">Standings are not loaded yet. Settlement lines appear after the first live update.</p>";
         }
         const positions = computePayoutPositions(rows);
         const transfers = minimizeSettlementTransfers(positions);
-        const pot = POOL_SIZE * POOL_BUY_IN;
+        const pot = poolSize * POOL_BUY_IN;
         let html = "";
 
-        if (!lastPayoutIntegrityOk) {
+        if (!integrityOk) {
           html +=
             "<p class=\"payout-warning\"><strong>Payout integrity:</strong> figures are provisional until the integrity check passes (see status card).</p>";
         }
@@ -1169,7 +1243,7 @@
         html += `<div class="payout-pool-summary">
           <p><strong>Buy-ins not collected:</strong> treat the full <strong>${formatMoneyPayout(
             pot,
-          )}</strong> main pot (${POOL_SIZE} × ${formatMoneyPayout(POOL_BUY_IN)}) as <strong>still to be gathered and paid out</strong> — not sitting in anyone&rsquo;s account from this pool.</p>
+          )}</strong> main pot (${poolSize} × ${formatMoneyPayout(POOL_BUY_IN)}) as <strong>still to be gathered and paid out</strong> — not sitting in anyone&rsquo;s account from this pool.</p>
           <p><strong>Side games:</strong> Eagles, Aces, Streaks, and Daily winners are pooled and settled to a <strong>zero-sum net</strong> per participant (see Side Game Standings below).</p></div>`;
         html += `<p class="payout-main-payee"><strong>Main event payee on these standings:</strong> route the <strong>${formatMoneyPayout(
           pot,
@@ -1271,8 +1345,28 @@
           }
         }
 
-        out.innerHTML = html;
-        renderPayoutPoolOnlyCharts(rows, focus);
+        return html;
+      }
+
+      function renderPayoutSettlement(rows) {
+        const out = document.getElementById("payout-settlement-output");
+        if (!out) return;
+        const focus = (document.getElementById("payout-focus") || {}).value || "";
+        out.innerHTML = buildPayoutSettlementHtml(rows || [], focus, POOL_SIZE, lastPayoutIntegrityOk);
+        renderPayoutPoolOnlyCharts(rows || [], focus);
+      }
+
+      function renderPayoutSettlementSansAlfredo() {
+        if (!SANS_ALFREDO_SECTION_ACTIVE) return;
+        const out = document.getElementById("payout-settlement-output-sans");
+        if (!out) return;
+        const focus = (document.getElementById("payout-focus-sans") || {}).value || "";
+        const rows = latestLeaderboardSansAlfredo || [];
+        const poolSize =
+          typeof SANS_ALFREDO_POOL_SIZE === "number" && SANS_ALFREDO_POOL_SIZE > 0
+            ? SANS_ALFREDO_POOL_SIZE
+            : rows.length;
+        out.innerHTML = buildPayoutSettlementHtml(rows, focus, poolSize, lastPayoutIntegrityOkSans);
       }
 
       function renderStandings(rows) {
@@ -1647,6 +1741,11 @@
         prevRanks = Object.fromEntries((data.leaderboard || []).map((row) => [row.name, row.rank]));
         lastPayoutIntegrityOk = data.payoutIntegrityOk !== false;
         renderPayoutSettlement(latestLeaderboard);
+        if (SANS_ALFREDO_SECTION_ACTIVE) {
+          latestLeaderboardSansAlfredo = Array.isArray(data.leaderboardSansAlfredo) ? data.leaderboardSansAlfredo : [];
+          lastPayoutIntegrityOkSans = data.payoutIntegrityOkSansAlfredo !== false;
+          renderPayoutSettlementSansAlfredo();
+        }
       }
 
       function renderParticipantDetails(participants) {
@@ -1908,8 +2007,13 @@
           renderPayoutSettlement(latestLeaderboard);
         });
       }
-      const payoutVenmoSection = document.getElementById("payout-settlement");
-      if (payoutVenmoSection) {
+      const payoutFocusSansEl = document.getElementById("payout-focus-sans");
+      if (payoutFocusSansEl) {
+        payoutFocusSansEl.addEventListener("change", () => {
+          renderPayoutSettlementSansAlfredo();
+        });
+      }
+      document.querySelectorAll(".payout-settlement").forEach((payoutVenmoSection) => {
         payoutVenmoSection.addEventListener("click", (e) => {
           const a = e.target.closest("a.payout-venmo-pay");
           if (!a) return;
@@ -1919,7 +2023,7 @@
           e.preventDefault();
           window.location.assign(app);
         });
-      }
+      });
       document.getElementById("download-standings").addEventListener("click", async () => {
         const table = document.getElementById("standings");
         if (!table) return;
@@ -1983,6 +2087,9 @@
           // User cancelled share.
         }
       });
+      if (SANS_ALFREDO_SECTION_ACTIVE) {
+        renderPayoutSettlementSansAlfredo();
+      }
       refreshState();
       resetRefreshCountdown();
       setInterval(refreshState, REFRESH_INTERVAL_MS);
