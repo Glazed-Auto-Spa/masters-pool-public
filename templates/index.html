@@ -18,7 +18,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260411k') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260411l') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -1223,10 +1223,18 @@
               <tbody>${pickRows}</tbody>
             </table>
             </div>
-            <div class="scorecard-details always-open">
-              <div class="day-tabs">${dayTabs}</div>
-              <div class="scorecards-by-day">${dayBlocks}</div>
-            </div>
+            <details class="scorecard-details">
+              <summary class="scorecard-details-summary">
+                <span class="scorecard-details-summary-text">
+                  <span class="scorecard-details-summary-label">Hole-by-hole scorecards</span>
+                  <span class="scorecard-details-summary-meta">Thu–Sun rounds · click to expand</span>
+                </span>
+              </summary>
+              <div class="scorecard-details-body">
+                <div class="day-tabs">${dayTabs}</div>
+                <div class="scorecards-by-day">${dayBlocks}</div>
+              </div>
+            </details>
             <p class="legend">All picks count each day.</p>
           `;
           const picksWrap = card.querySelector(".participant-picks-wrap");
