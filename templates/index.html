@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412s') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412t') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -975,6 +975,25 @@
         return Math.round((Number(DAILY_WINNER_DAY_GROSS) / d) * 100) / 100;
       }
 
+      function holesRemainingForParticipantDay(row, day) {
+        const byDay = row.holesRemainingByDay || {};
+        const raw = byDay[String(day)] ?? byDay[day];
+        if (raw === null || raw === undefined) return null;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : null;
+      }
+
+      /** True when every pool participant has 0 holes left that day (all roster picks finished that round). */
+      function isDailyScoringFinalForDay(rows, day) {
+        if (!rows || !rows.length) return false;
+        for (const r of rows) {
+          const hr = holesRemainingForParticipantDay(r, day);
+          if (hr === null) return false;
+          if (hr > 0) return false;
+        }
+        return true;
+      }
+
       function renderPayoutPoolOnlyCharts(rows, focus) {
         const mount = document.getElementById("payout-pool-only-charts");
         if (!mount) return;
@@ -1092,32 +1111,31 @@
           .map((d) => {
             const w = (rows || []).find((r) => (r.dailyWinnerDays || []).map(Number).includes(d));
             const wname = w ? escapeHtmlPayout(w.name) : "—";
-            const payLine = w
-              ? `Winner collects <strong>${formatMoneyPayout(DAILY_WINNER_DAY_GROSS)}</strong> total — each of the other <strong>${POOL_SIZE - 1}</strong> participants pays them <strong>${formatMoneyPayout(
-                  perOther,
-                )}</strong> (off-app that day).`
-              : "No winner recorded yet for that day.";
+            const finalized = Boolean(w && isDailyScoringFinalForDay(rows, d));
+            const winnerClass = finalized ? " class=\"daily-side-winner-final\"" : "";
             return `<tr>
               <td>${dayLabels[d - 1]}</td>
-              <td>${wname}</td>
-              <td>${payLine}</td>
+              <td${winnerClass}>${wname}</td>
             </tr>`;
           })
           .join("");
 
         html += `<h3 class="payout-subhead payout-subhead--pool-only">3. Daily $${perOther} side bet — who to pay</h3>
-          <p class="payout-table-note">Informational: ${formatMoneyPayout(DAILY_WINNER_DAY_GROSS)} to the daily winner when awarded (${formatMoneyPayout(
-            perOther,
-          )} × ${POOL_SIZE - 1} others). Handle cash / Venmo off-sheet; not included in tables 1–2.</p>
+          <p class="payout-table-note">Informational only — not included in tables 1–2. Winner follows live daily low team score; ties use the same ordering as the main standings.</p>
           <div class="payout-table-scroll">
           <table class="pick-table payout-daily-side-table">
             <thead><tr>
               <th>Day</th>
               <th>Winner</th>
-              <th>Settlement</th>
             </tr></thead>
             <tbody>${dailyRows}</tbody>
-          </table></div>`;
+          </table></div>
+          <p class="payout-table-note payout-daily-side-footnote"><strong>Settlement:</strong> Each daily winner collects <strong>${formatMoneyPayout(
+            DAILY_WINNER_DAY_GROSS,
+          )}</strong> total; each of the other <strong>${POOL_SIZE - 1}</strong> participants pays them <strong>${formatMoneyPayout(
+            perOther,
+          )}</strong> (cash or Venmo off-app that day).</p>
+          <p class="payout-table-note payout-daily-side-footnote"><strong>Winner highlight:</strong> The winner cell turns <strong class="daily-side-winner-swatch">green</strong> once that day is final — when <em>every</em> pool member has <strong>0</strong> holes remaining for that day on the live standings (no picks still on the course for that round).</p>`;
 
         mount.innerHTML = html;
       }

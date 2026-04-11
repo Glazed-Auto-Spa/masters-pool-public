@@ -3236,6 +3236,25 @@ tbody tr:hover {
   margin-top: 26px;
 }
 
+.skin-masters-v7 .payout-daily-side-footnote {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.skin-masters-v7 .payout-daily-side-footnote + .payout-daily-side-footnote {
+  margin-top: 8px;
+}
+
+.skin-masters-v7 .payout-daily-side-table td.daily-side-winner-final {
+  background: linear-gradient(180deg, #d8f5e4, #c5edd6);
+  color: #0b3d22;
+  font-weight: 700;
+}
+
+.skin-masters-v7 .daily-side-winner-swatch {
+  color: #0b5c32;
+}
+
 .skin-masters-v7 .mobile-daily-tiebreak-caption {
   margin: 0 0 10px;
   font-size: 0.78rem;
