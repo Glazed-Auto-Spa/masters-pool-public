@@ -515,17 +515,24 @@
 
       function pickStatusChipHtml(pick) {
         const sd0 = String(pick.statusDisplay || "").trim().toUpperCase();
-        const chipMod =
-          sd0 === "MC" || sd0 === "WD" || sd0 === "DQ" ? "penalty" : sd0 === "LIVE" || sd0 === "" ? "live" : "neutral";
+        const isPenalty = sd0 === "MC" || sd0 === "WD" || sd0 === "DQ";
         if (!pick.statusDisplay) return "";
         const avg = pick.penaltyWeekendAvgToPar;
         const hasAvg =
-          (sd0 === "MC" || sd0 === "WD" || sd0 === "DQ") &&
+          isPenalty &&
           avg !== null &&
           avg !== undefined &&
           !Number.isNaN(Number(avg));
-        const label = hasAvg ? `${pick.statusDisplay} ${formatToPar(Number(avg))} AVG` : pick.statusDisplay;
-        return `<span class="pick-status-chip pick-status-chip--${chipMod}">${label}</span>`;
+        if (hasAvg) {
+          return `<span class="pick-status-chip pick-status-chip--penalty">${pick.statusDisplay} ${formatToPar(Number(avg))} AVG</span>`;
+        }
+        const tee = String(pick.teeTimePhoenix || "").trim();
+        if (sd0 === "LIVE" && tee) {
+          return `<span class="pick-status-chip pick-status-chip--live">${pick.statusDisplay} · ${tee}</span>`;
+        }
+        const chipMod =
+          isPenalty ? "penalty" : sd0 === "LIVE" || sd0 === "" ? "live" : "neutral";
+        return `<span class="pick-status-chip pick-status-chip--${chipMod}">${pick.statusDisplay}</span>`;
       }
 
       function buildDesktopPickScorecardArticleHtml(pick, dayKey, courseCard) {

@@ -3012,6 +3012,10 @@ tbody tr:hover {
   color: #1d5f85;
   background: #e8f4fb;
   border-color: #c5dce8;
+  max-width: min(100%, 14rem);
+  white-space: normal;
+  line-height: 1.25;
+  text-align: left;
 }
 
 .skin-masters-v7 .pick-status-chip--neutral {
@@ -3082,6 +3086,10 @@ tbody tr:hover {
   font-weight: 700;
   color: #1d3b4a;
   margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
 }
 
 .skin-masters-v7 .scorecard-desktop .scorecard-desktop-one-row {
@@ -3527,6 +3535,10 @@ tbody tr:hover {
     font-weight: 700;
     color: #1d3b4a;
     margin-bottom: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
   }
 
   .skin-masters-v7 .scorecard-mobile-grid {
