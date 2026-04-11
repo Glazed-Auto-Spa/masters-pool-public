@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
@@ -18,6 +19,9 @@ def create_app(base_dir: Path) -> Flask:
     config = load_runtime_config(base_dir)
     service = PoolService(base_dir=base_dir, config=config)
     cron_secret = os.getenv("MASTERS_POOL_CRON_SECRET", "").strip() or os.getenv("CRON_SECRET", "").strip()
+    # Throttle ESPN polls triggered by browser /api/state (matches 5-minute client refresh).
+    _api_state_poll_interval_sec = 300.0
+    _last_api_state_poll_mono: list[float] = [-1e18]
 
     @app.get("/")
     def index() -> str:
@@ -31,6 +35,13 @@ def create_app(base_dir: Path) -> Flask:
 
     @app.get("/api/state")
     def api_state():
+        now = time.monotonic()
+        if now - _last_api_state_poll_mono[0] >= _api_state_poll_interval_sec:
+            _last_api_state_poll_mono[0] = now
+            try:
+                service.poll_once()
+            except Exception:  # noqa: BLE001
+                pass
         state = service.get_state()
         if not state:
             try:

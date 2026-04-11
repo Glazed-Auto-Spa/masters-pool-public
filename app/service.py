@@ -5,8 +5,15 @@ from pathlib import Path
 from typing import Any
 
 from app.config import PoolConfig
-from app.espn_client import EspnClient, extract_players_and_status
-from app.scoring import score_participants
+from app.espn_client import (
+    EspnClient,
+    extract_competition_meta,
+    extract_masters_field_leaderboard_top,
+    extract_players_and_status,
+    map_player_tee_times_phoenix_current_period,
+    merge_player_statuses_with_core,
+)
+from app.scoring import is_penalty_status, score_participants
 from app.state_store import STATE_SCHEMA_VERSION, StateStore, create_state_store
 from app.storage import snapshot_to_dict
 
@@ -22,11 +29,33 @@ class PoolService:
         with self.store.acquire_poll_lock(blocking=True):
             previous_state = self.get_state()
             scoreboard = self.client.get_scoreboard(event_id=self.config.event_id)
+            competition_meta = extract_competition_meta(scoreboard)
             players, statuses, winning_to_par, round_scores, field_positions = extract_players_and_status(scoreboard)
             self.store.append_ledger("scoreboard", scoreboard)
 
             tracked_players = self._tracked_players(players)
-            tracked_statuses = {player_id: statuses.get(player_id, "") for player_id in tracked_players.keys()}
+            masters_preview = extract_masters_field_leaderboard_top(scoreboard, limit=10)
+            enrich_ids = set(tracked_players.keys()) | {
+                int(r["playerId"]) for r in masters_preview if isinstance(r.get("playerId"), int)
+            }
+            merged_statuses = merge_player_statuses_with_core(
+                self.client,
+                self.config.event_id,
+                statuses,
+                enrich_ids,
+            )
+            masters_field_leaderboard = extract_masters_field_leaderboard_top(
+                scoreboard, limit=10, status_overrides=merged_statuses
+            )
+            tracked_statuses = {
+                player_id: merged_statuses.get(player_id, statuses.get(player_id, ""))
+                for player_id in tracked_players.keys()
+            }
+            tee_times_phoenix = map_player_tee_times_phoenix_current_period(
+                scoreboard,
+                tracked_players.keys(),
+                merged_statuses,
+            )
             snapshots, errors = self.client.build_snapshot(
                 event_id=self.config.event_id,
                 players=tracked_players,
@@ -47,6 +76,8 @@ class PoolService:
                 "eventId": self.config.event_id,
                 "updatedAt": datetime.now(UTC).isoformat(),
                 "winningToPar": winning_to_par,
+                "competitionMeta": competition_meta,
+                "mastersFieldLeaderboard": masters_field_leaderboard,
                 "degradedMode": bool(errors),
                 "errors": errors,
                 **standings,
@@ -66,6 +97,8 @@ class PoolService:
                 participant_details=state.get("participantDetails", []),
                 player_pulse=state["playerPulse"],
                 field_positions=field_positions,
+                competition_meta=competition_meta,
+                tee_times_phoenix=tee_times_phoenix,
             )
             cycle_feed = _build_event_feed(previous_state=previous_state, current_state=state)
             historical_feed = previous_state.get("eventFeed", []) if isinstance(previous_state, dict) else []
@@ -386,10 +419,23 @@ def _annotate_rank_movement(leaderboard: list[dict[str, Any]], previous_leaderbo
             row["movedThisCycle"] = False
 
 
+def _penalty_through_from_status(status: str) -> str | None:
+    if not is_penalty_status(status):
+        return None
+    u = status.upper()
+    if "WITHDRAW" in u or " W/D" in u or "W/D" in u:
+        return "WD"
+    if "DISQUAL" in u or " DQ" in u:
+        return "DQ"
+    return "MC"
+
+
 def _annotate_pick_live_state(
     participant_details: list[dict[str, Any]],
     player_pulse: dict[str, dict[str, Any]],
     field_positions: dict[int, str],
+    competition_meta: dict[str, Any] | None = None,
+    tee_times_phoenix: dict[int, str] | None = None,
 ) -> None:
     for participant in participant_details:
         picks = participant.get("picks", [])
@@ -400,6 +446,7 @@ def _annotate_pick_live_state(
             if not isinstance(player_id, int):
                 pick["fieldPosition"] = "-"
                 pick["throughDisplay"] = "-"
+                pick["teeTimePhoenix"] = None
                 pick["scoreToPar"] = None
                 continue
             pulse = player_pulse.get(str(player_id), {})
@@ -409,20 +456,42 @@ def _annotate_pick_live_state(
                 round_number=pulse.get("round"),
                 hole=pulse.get("hole"),
                 status=str(pick.get("status", "") or ""),
+                competition_meta=competition_meta,
             )
+            tees = tee_times_phoenix or {}
+            td = pick["throughDisplay"]
+            pick["teeTimePhoenix"] = tees.get(player_id) if td in ("-", "--") else None
 
 
-def _through_display(round_number: Any, hole: Any, status: str) -> str:
-    status_upper = status.upper()
-    if "WITHDRAW" in status_upper or " WD" in f" {status_upper}":
-        return "WD"
-    if "MISSED CUT" in status_upper or " MC" in f" {status_upper}":
-        return "MC"
+def _through_display(
+    round_number: Any,
+    hole: Any,
+    status: str,
+    competition_meta: dict[str, Any] | None = None,
+) -> str:
+    competition_meta = competition_meta or {}
+    penalty = _penalty_through_from_status(status)
+    if penalty:
+        return penalty
 
     if not isinstance(round_number, int) or not isinstance(hole, int):
         return "-"
     if round_number <= 0 or hole <= 0:
         return "-"
+
+    active_period = competition_meta.get("period")
+    if isinstance(active_period, int) and 1 <= active_period <= 4:
+        if round_number < active_period:
+            return "--"
+        if round_number == active_period:
+            if hole >= 18:
+                return "F"
+            return f"Thru {hole}"
+        # Pulse ahead of official period (rare)
+        if hole >= 18:
+            return "F"
+        return f"Thru {hole}"
+
     if hole >= 18:
         return "F"
     return f"Thru {hole}"

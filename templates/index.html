@@ -18,7 +18,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260409i') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260411i') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -50,8 +50,74 @@
           <p class="kicker">Live Tournament View</p>
           <h2>Masters Pool Leaderboard</h2>
           <p>
-            Live field data, standings movement, and participant scorecards.
+            Live tournament and pool leaderboards, movement feed, and participant scorecards.
           </p>
+        </div>
+      </section>
+
+      <section class="masters-field-leaderboard" aria-labelledby="live-leaderboards-title">
+        <h2 id="live-leaderboards-title" class="masters-field-leaderboard-heading">Live leaderboards</h2>
+        <p class="masters-field-leaderboard-note">
+          Masters: official ESPN field · top 10. Pool: full standings with holes remaining on picks still in play. Page
+          refresh every 5 minutes.
+        </p>
+        <div class="masters-field-leaderboard-shell">
+          <div class="masters-field-leaderboard-col">
+            <p class="masters-field-col-label">Masters tournament · top 10</p>
+            <table class="pick-table masters-field-leaderboard-table" aria-label="Masters tournament top 10">
+              <thead>
+                <tr>
+                  <th>Pos</th>
+                  <th>Player</th>
+                  <th>Score</th>
+                  <th>Thru</th>
+                </tr>
+              </thead>
+              <tbody id="masters-field-leaderboard-body">
+                {% for row in state.get("mastersFieldLeaderboard", []) %}
+                <tr>
+                  <td>{{ row.pos }}</td>
+                  <td>{{ row.name }}</td>
+                  <td>{{ row.scoreDisplay }}</td>
+                  <td>{{ row.thru }}</td>
+                </tr>
+                {% endfor %}
+                {% if not state.get("mastersFieldLeaderboard") %}
+                <tr>
+                  <td colspan="4" class="table-empty">Waiting for tournament data…</td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+          <div class="masters-field-pool-col">
+            <p class="masters-field-col-label">Pool · standings</p>
+            <table class="pick-table masters-field-leaderboard-table" aria-label="Pool leaderboard">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Participant</th>
+                  <th>Total</th>
+                  <th>Holes left</th>
+                </tr>
+              </thead>
+              <tbody id="masters-pool-leaderboard-body">
+                {% for row in state.get("leaderboard", []) %}
+                <tr>
+                  <td>{{ row.rank }}</td>
+                  <td>{{ row.name }}</td>
+                  <td>{{ to_par(row.eventScore) }}</td>
+                  <td><strong>{{ row.get("holesRemaining", 0) }}</strong></td>
+                </tr>
+                {% endfor %}
+                {% if not state.get("leaderboard") %}
+                <tr>
+                  <td colspan="4" class="table-empty">No standings data yet.</td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -89,6 +155,7 @@
 
       <section class="event-feed">
         <h2>Live Event Feed</h2>
+        <p class="event-feed-movements-label">Recent movement</p>
         <ul id="event-feed-list" class="event-feed-list"></ul>
         <div class="event-feed-actions">
           <button id="feed-more" type="button" class="feed-more-btn" hidden>Show 10 more</button>
@@ -200,11 +267,40 @@
         </table>
       </section>
 
+      <section class="mobile-sidegame-standings">
+        <h2>Side Game Standings</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Participant</th>
+              <th>Eagles</th>
+              <th>Aces</th>
+              <th>Streaks</th>
+              <th>Daily</th>
+              <th>Side Net</th>
+            </tr>
+          </thead>
+          <tbody id="mobile-sidegames-body">
+            {% for row in state.get("leaderboard", []) %}
+            <tr>
+              <td>{{ row.name }}</td>
+              <td>${{ row.eagleBonusDollars }}</td>
+              <td>${{ row.aceBonusDollars }}</td>
+              <td>${{ row.birdieStreakBonusDollars }}</td>
+              <td>${{ row.get("dailyWinnerBonusDollars", 0) }}</td>
+              <td><strong>${{ '%.2f'|format(row.netPayoutDollars or 0) }}</strong></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+
       <section class="sidegames">
         <h2>Side Game Leaders</h2>
         <div class="sidegames-grid">
           <article class="sidegame-card">
             <h3>Eagles ($50)</h3>
+            <p class="sidegame-rule">Rule: each eagle by any golfer on your roster counts as one eagle event for this side game.</p>
             <ol id="side-eagles">
               {% for row in state.get("sideGameLeaders", {}).get("eagles", [])[:3] %}
               <li>{{ row.name }} - ${{ row.amount }}</li>
@@ -213,6 +309,7 @@
           </article>
           <article class="sidegame-card">
             <h3>Aces ($100)</h3>
+            <p class="sidegame-rule">Rule: each hole-in-one (ace) by any golfer on your roster counts as one ace event.</p>
             <ol id="side-aces">
               {% for row in state.get("sideGameLeaders", {}).get("aces", [])[:3] %}
               <li>{{ row.name }} - ${{ row.amount }}</li>
@@ -221,6 +318,7 @@
           </article>
           <article class="sidegame-card">
             <h3>Birdie Streaks ($50)</h3>
+            <p class="sidegame-rule">Rule: a streak starts at 3 straight birdie-or-better holes, then extends with +1 event for each additional consecutive qualifying hole.</p>
             <ol id="side-streaks">
               {% for row in state.get("sideGameLeaders", {}).get("streaks", [])[:3] %}
               <li>{{ row.name }} - ${{ row.amount }}</li>
@@ -229,6 +327,7 @@
           </article>
           <article class="sidegame-card">
             <h3>Daily Winners ($50/day)</h3>
+            <p class="sidegame-rule">Rule: each day (Thu/Fri/Sat/Sun), the single lowest team score wins that day’s event. Future days do not count until they begin.</p>
             <ol id="side-daily-winners">
               {% for row in state.get("sideGameLeaders", {}).get("dailyWinners", [])[:3] %}
               <li>{{ row.name }} - ${{ row.amount }}</li>
@@ -236,6 +335,52 @@
             </ol>
           </article>
         </div>
+      </section>
+
+      <section class="rules-section">
+        <h2>Rules & Payouts</h2>
+        <div class="rules-grid">
+          <article class="rules-card">
+            <h3>Main Scoring</h3>
+            <ul>
+              <li>Main event buy-in is <strong>$25 per participant</strong>.</li>
+              <li>Main event payout is <strong>winner-take-all</strong> (entire main pot to 1st place).</li>
+              <li>Each participant has 8 picks. All 8 picks count each day.</li>
+              <li>Daily total = sum of all pick scores for that day (Thu/Fri/Sat/Sun).</li>
+              <li>Event total = Thu + Fri + Sat + Sun (lowest total wins).</li>
+              <li>
+                If a player misses the cut or withdraws, and no new round data is available, the app carries their cumulative to-par
+                at stop time into each remaining day.
+              </li>
+            </ul>
+          </article>
+          <article class="rules-card">
+            <h3>Side Games</h3>
+            <ul>
+              <li>Eagles: +$50 for each eagle by any player on your roster.</li>
+              <li>Aces: +$100 for each ace (hole-in-one) on your roster.</li>
+              <li>
+                Birdie streaks: starts at 3 straight birdie-or-better holes for +$50, then +$50 for each additional consecutive
+                birdie-or-better hole.
+              </li>
+              <li>Daily winner: +$50 each day (Thu/Fri/Sat/Sun) to the single lowest team score that day.</li>
+              <li>Streak qualifying holes: birdie, eagle, ace. Any other result ends the streak.</li>
+            </ul>
+          </article>
+          <article class="rules-card">
+            <h3>Tiebreaker & Feed Notes</h3>
+            <ul>
+              <li>Tiebreaker is predicted final winning score to par after Round 4.</li>
+              <li>If event totals tie, closest tiebreak prediction wins.</li>
+              <li>Last update and feed timestamps are shown in Phoenix local time (MST).</li>
+              <li>Live Event Feed shows latest 10 updates; use “Show 10 more” to expand.</li>
+            </ul>
+          </article>
+        </div>
+        <p class="rules-footnote">
+          Main event pot is buy-in driven ($25 x participant count) and paid winner-take-all.
+          Side bets (Eagles/Aces/Streaks/Daily Winners) are settled across all participants.
+        </p>
       </section>
 
       <section class="participant-section">
@@ -302,8 +447,33 @@
                         + pick.dayScores.get("4", pick.dayScores.get(4, 0))) }}
                     </strong>
                   </td>
-                  {% set status_text = pick.status if pick.status else (pick.get("throughDisplay", "LIVE") if pick.get("throughDisplay", "-") != "-" else "LIVE") %}
-                  <td class="status-cell status-{{ status_text|lower|replace(' ', '-') }}">{{ status_text }}</td>
+                  {% set disp = pick.get("statusDisplay") %}
+                  {% if not disp %}
+                    {% if pick.status %}
+                      {% set disp = pick.status %}
+                    {% elif pick.get("throughDisplay", "-") not in ["-", "--"] %}
+                      {% set disp = pick.get("throughDisplay", "Live") %}
+                    {% else %}
+                      {% set disp = "Live" %}
+                    {% endif %}
+                  {% endif %}
+                  {% set tee = pick.get("teeTimePhoenix") %}
+                  {% set status_text = disp ~ (" · " ~ tee if tee and disp == "Live" else "") %}
+                  {% set u = disp|string|trim|upper %}
+                  {% if u == "MC" %}
+                    {% set status_class = "status-mc" %}
+                  {% elif u == "WD" %}
+                    {% set status_class = "status-wd" %}
+                  {% elif u == "DQ" %}
+                    {% set status_class = "status-dq" %}
+                  {% elif u == "F" %}
+                    {% set status_class = "status-final" %}
+                  {% elif u.startswith("THRU") %}
+                    {% set status_class = "status-live" %}
+                  {% else %}
+                    {% set status_class = "status-live" %}
+                  {% endif %}
+                  <td class="status-cell {{ status_class }}">{{ status_text }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -313,57 +483,12 @@
           {% endfor %}
         </div>
       </section>
-
-      <section class="rules-section">
-        <h2>Rules & Payouts</h2>
-        <div class="rules-grid">
-          <article class="rules-card">
-            <h3>Main Scoring</h3>
-            <ul>
-              <li>Main event buy-in is <strong>$25 per participant</strong>.</li>
-              <li>Main event payout is <strong>winner-take-all</strong> (entire main pot to 1st place).</li>
-              <li>Each participant has 8 picks. All 8 picks count each day.</li>
-              <li>Daily total = sum of all pick scores for that day (Thu/Fri/Sat/Sun).</li>
-              <li>Event total = Thu + Fri + Sat + Sun (lowest total wins).</li>
-              <li>
-                If a player misses the cut or withdraws, and no new round data is available, the app carries their cumulative to-par
-                at stop time into each remaining day.
-              </li>
-            </ul>
-          </article>
-          <article class="rules-card">
-            <h3>Side Games</h3>
-            <ul>
-              <li>Eagles: +$50 for each eagle by any player on your roster.</li>
-              <li>Aces: +$100 for each ace (hole-in-one) on your roster.</li>
-              <li>
-                Birdie streaks: starts at 3 straight birdie-or-better holes for +$50, then +$50 for each additional consecutive
-                birdie-or-better hole.
-              </li>
-              <li>Daily winner: +$50 each day (Thu/Fri/Sat/Sun) to the single lowest team score that day.</li>
-              <li>Streak qualifying holes: birdie, eagle, ace. Any other result ends the streak.</li>
-            </ul>
-          </article>
-          <article class="rules-card">
-            <h3>Tiebreaker & Feed Notes</h3>
-            <ul>
-              <li>Tiebreaker is predicted final winning score to par after Round 4.</li>
-              <li>If event totals tie, closest tiebreak prediction wins.</li>
-              <li>Last update and feed timestamps are shown in Phoenix local time (MST).</li>
-              <li>Live Event Feed shows latest 10 updates; use “Show 10 more” to expand.</li>
-            </ul>
-          </article>
-        </div>
-        <p class="rules-footnote">
-          Main event pot is buy-in driven ($25 x participant count) and paid winner-take-all.
-          Side bets (Eagles/Aces/Streaks/Daily Winners) are settled across all participants.
-        </p>
-      </section>
     </main>
 
     <script>
       let prevRanks = {};
-      let nextRefreshSeconds = 300;
+      const REFRESH_INTERVAL_MS = 300000;
+      let nextRefreshSeconds = REFRESH_INTERVAL_MS / 1000;
       let lastSeenUpdatedAt = null;
       let feedLimit = 10;
       let feedSignature = "";
@@ -372,6 +497,7 @@
       let latestParticipants = [];
       let standingsSignature = "";
       let participantsSignature = "";
+      let mastersFieldSignature = "";
       const phxFormatter = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Phoenix",
         year: "numeric",
@@ -383,6 +509,122 @@
         hour12: true,
       });
 
+      const DEFAULT_COURSE_CARD = {
+        holes: Array.from({ length: 18 }, (_, i) => i + 1),
+        pars: [4, 5, 4, 3, 4, 3, 4, 5, 4, 4, 4, 3, 5, 4, 5, 3, 4, 4],
+        yards: [445, 585, 350, 177, 495, 192, 450, 570, 460, 495, 520, 150, 545, 440, 550, 165, 450, 465],
+        outPar: 36,
+        inPar: 36,
+        totalPar: 72,
+        outYards: 3724,
+        inYards: 3780,
+        totalYards: 7504,
+      };
+
+      function styleClassForHoleOutcome(type) {
+        const t = (type || "").toUpperCase();
+        if (t === "ACE" || t === "HOLE_IN_ONE") return "hole-mark ace";
+        if (t === "DOUBLE_EAGLE" || t === "ALBATROSS") return "hole-mark double-eagle";
+        if (t === "EAGLE") return "hole-mark eagle";
+        if (t === "BIRDIE") return "hole-mark birdie";
+        if (t === "BOGEY") return "hole-mark bogey";
+        if (t === "DOUBLE_BOGEY" || t === "DOUBLEBOGEY") return "hole-mark double-bogey";
+        if (t === "TRIPLE_BOGEY" || t === "TRIPLEBOGEY" || t === "SNOWMAN") return "hole-mark triple-bogey";
+        if (
+          t === "QUADRUPLE_BOGEY" ||
+          t === "QUADRUPLEBOGEY" ||
+          t === "QUAD" ||
+          t === "OTHER" ||
+          t.includes("WORSE")
+        ) {
+          return "hole-mark quad-plus";
+        }
+        return "hole-mark";
+      }
+
+      function roundForPickDay(pick, day) {
+        return (
+          (pick.roundScorecards || {})[String(day)] ||
+          (pick.roundScorecards || {})[day] ||
+          { holes: [], holeTypes: [], out: 0, in: 0, total: 0, toPar: 0 }
+        );
+      }
+
+      function pickStatusChipHtml(pick) {
+        const sd0 = String(pick.statusDisplay || "").trim().toUpperCase();
+        const chipMod =
+          sd0 === "MC" || sd0 === "WD" || sd0 === "DQ" ? "penalty" : sd0 === "LIVE" || sd0 === "" ? "live" : "neutral";
+        return pick.statusDisplay
+          ? `<span class="pick-status-chip pick-status-chip--${chipMod}">${pick.statusDisplay}</span>`
+          : "";
+      }
+
+      function buildDesktopPickScorecardArticleHtml(pick, dayKey, courseCard) {
+        const round = roundForPickDay(pick, dayKey);
+        const holes = Array.isArray(round.holes) ? round.holes : [];
+        const types = Array.isArray(round.holeTypes) ? round.holeTypes : [];
+        const holeNumberCells18 = Array.from({ length: 18 }, (_, i) => `<td>${i + 1}</td>`).join("");
+        const parCells18 = Array.from({ length: 18 }, (_, i) => {
+          const p = (courseCard.pars || [])[i] || "-";
+          return `<td>${p}</td>`;
+        }).join("");
+        const yardCells18 = Array.from({ length: 18 }, (_, i) => {
+          const y = (courseCard.yards || [])[i] || "-";
+          return `<td>${y}</td>`;
+        }).join("");
+        const scoreCells18 = Array.from({ length: 18 }, (_, i) => {
+          const v = holes[i] || 0;
+          const t = types[i] || "";
+          const cls = styleClassForHoleOutcome(t);
+          return `<td><span class="${cls}" title="${t || "NO SCORE"}">${v === 0 ? "-" : v}</span></td>`;
+        }).join("");
+        const headChip = pickStatusChipHtml(pick);
+        return `
+                <article class="scorecard-mobile-player">
+                  <div class="scorecard-mobile-player-head">${pick.playerName} ${headChip}</div>
+                  <div class="scorecard-mobile-grid scorecard-desktop-one-row">
+                    <div class="scorecard-mobile-nine scorecard-desktop-round">
+                      <table class="scorecard-mobile-table">
+                        <tbody>
+                          <tr>
+                            <th>HOLE</th>
+                            ${holeNumberCells18}
+                            <th>OUT</th><th>IN</th><th>TOT</th>
+                          </tr>
+                          <tr>
+                            <th>PAR</th>
+                            ${parCells18}
+                            <th>${courseCard.outPar || 36}</th>
+                            <th>${courseCard.inPar || 36}</th>
+                            <th>${courseCard.totalPar || 72}</th>
+                          </tr>
+                          <tr>
+                            <th>YDS</th>
+                            ${yardCells18}
+                            <th>${courseCard.outYards || 3724}</th>
+                            <th>${courseCard.inYards || 3780}</th>
+                            <th>${courseCard.totalYards || 7504}</th>
+                          </tr>
+                          <tr>
+                            <th>SCR</th>
+                            ${scoreCells18}
+                            <th>${round.out || 0}</th>
+                            <th>${round.in || 0}</th>
+                            <th><strong>${round.total || 0}</strong></th>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="scorecard-mobile-summary">
+                    <span>OUT ${round.out || 0}</span>
+                    <span>IN ${round.in || 0}</span>
+                    <strong>TOT ${round.total || 0}</strong>
+                  </div>
+                </article>
+              `;
+      }
+
       function fmtClock(totalSeconds) {
         const mins = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
         const secs = String(totalSeconds % 60).padStart(2, "0");
@@ -390,7 +632,7 @@
       }
 
       function resetRefreshCountdown() {
-        nextRefreshSeconds = 300;
+        nextRefreshSeconds = REFRESH_INTERVAL_MS / 1000;
         document.getElementById("next-refresh").textContent = fmtClock(nextRefreshSeconds);
       }
 
@@ -440,6 +682,7 @@
         body.innerHTML = "";
         if (!sortedRows.length) {
           body.innerHTML = `<tr><td colspan="17" class="table-empty">No standings yet. Waiting for live data.</td></tr>`;
+          renderMobileSidegameStandings([]);
           return;
         }
         for (const row of sortedRows) {
@@ -471,6 +714,29 @@
           `;
           body.appendChild(tr);
         }
+        renderMobileSidegameStandings(sortedRows);
+      }
+
+      function renderMobileSidegameStandings(rows) {
+        const body = document.getElementById("mobile-sidegames-body");
+        if (!body) return;
+        body.innerHTML = "";
+        if (!rows.length) {
+          body.innerHTML = `<tr><td colspan="6" class="table-empty">No side game data yet.</td></tr>`;
+          return;
+        }
+        for (const row of rows) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${row.name}</td>
+            <td>$${row.eagleBonusDollars || 0}</td>
+            <td>$${row.aceBonusDollars || 0}</td>
+            <td>$${row.birdieStreakBonusDollars || 0}</td>
+            <td>$${row.dailyWinnerBonusDollars || 0}</td>
+            <td><strong>${row.netPayoutDollars === null || row.netPayoutDollars === undefined ? "--" : `$${formatCurrency(row.netPayoutDollars)}`}</strong></td>
+          `;
+          body.appendChild(tr);
+        }
       }
 
       function updateTicker(rows) {
@@ -489,6 +755,41 @@
         ticker.textContent = "";
       }
 
+      function renderPoolLeaderboardMini(rows) {
+        const body = document.getElementById("masters-pool-leaderboard-body");
+        if (!body) return;
+        body.replaceChildren();
+        if (!rows || !rows.length) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = 4;
+          td.className = "table-empty";
+          td.textContent = "No standings data yet.";
+          tr.appendChild(td);
+          body.appendChild(tr);
+          return;
+        }
+        for (const row of rows) {
+          const tr = document.createElement("tr");
+          const tdRank = document.createElement("td");
+          tdRank.textContent = row.rank != null ? String(row.rank) : "";
+          const tdName = document.createElement("td");
+          tdName.textContent = row.name != null ? String(row.name) : "";
+          const tdTotal = document.createElement("td");
+          tdTotal.textContent = formatToPar(row.eventScore);
+          const tdHoles = document.createElement("td");
+          const strongHoles = document.createElement("strong");
+          const hr = row.holesRemaining;
+          strongHoles.textContent = Number.isFinite(Number(hr)) ? String(Number(hr)) : "0";
+          tdHoles.appendChild(strongHoles);
+          tr.appendChild(tdRank);
+          tr.appendChild(tdName);
+          tr.appendChild(tdTotal);
+          tr.appendChild(tdHoles);
+          body.appendChild(tr);
+        }
+      }
+
       function renderEventFeed(feed) {
         const root = document.getElementById("event-feed-list");
         const moreBtn = document.getElementById("feed-more");
@@ -502,7 +803,7 @@
         }
         root.innerHTML = "";
         if (!normalizedFeed.length) {
-          root.innerHTML = `<li class="event-item calm"><span class="event-time">--</span><span class="event-msg">No movement yet for this cycle.</span></li>`;
+          root.innerHTML = `<li class="event-item calm"><span class="event-time">--</span><span class="event-msg">No rank changes since last update.</span></li>`;
         } else {
           for (const entry of normalizedFeed.slice(0, feedLimit)) {
             const li = document.createElement("li");
@@ -529,9 +830,10 @@
       function statusClass(rawStatus) {
         const status = String(rawStatus || "").trim().toUpperCase();
         if (!status) return "status-live";
-        if (status === "MC" || status.includes("MISSED CUT")) return "status-mc";
-        if (status === "WD" || status.includes("WITHDRAW")) return "status-wd";
-        if (status === "DQ" || status.includes("DISQUAL")) return "status-dq";
+        const u = status.trim().toUpperCase();
+        if (u === "CUT" || u === "MC" || status.includes("MISSED CUT")) return "status-mc";
+        if (u === "WD" || status.includes("WITHDRAW")) return "status-wd";
+        if (u === "DQ" || status.includes("DISQUAL")) return "status-dq";
         if (status === "F") return "status-final";
         if (status.startsWith("THRU")) return "status-live";
         return "status-live";
@@ -557,8 +859,11 @@
         const activeGolfers = picks.filter((pick) => {
           const through = String(pick.throughDisplay || "-").toUpperCase();
           const status = String(pick.status || "").toUpperCase();
-          if (through === "-" || through === "F" || through === "MC" || through === "WD") return false;
-          if (status.includes("MISSED CUT") || status.includes("WITHDRAW")) return false;
+          const sd = String(pick.statusDisplay || "").toUpperCase();
+          if (through === "-" || through === "--" || through === "F" || through === "MC" || through === "WD" || through === "DQ") return false;
+          if (sd === "MC" || sd === "WD" || sd === "DQ") return false;
+          if (status.includes("MISSED CUT") || status.includes("WITHDRAW") || status.includes("DISQUAL")) return false;
+          if (status.trim().toUpperCase() === "CUT") return false;
           return true;
         }).length;
         const roundEl = document.getElementById("context-round");
@@ -595,6 +900,31 @@
           .join("");
         select.innerHTML = options;
         select.value = current;
+      }
+
+      function renderMastersFieldLeaderboard(rows) {
+        const body = document.getElementById("masters-field-leaderboard-body");
+        if (!body) return;
+        body.innerHTML = "";
+        if (!rows || rows.length === 0) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = 4;
+          td.className = "table-empty";
+          td.textContent = "Waiting for tournament data…";
+          tr.appendChild(td);
+          body.appendChild(tr);
+          return;
+        }
+        for (const r of rows) {
+          const tr = document.createElement("tr");
+          for (const key of ["pos", "name", "scoreDisplay", "thru"]) {
+            const td = document.createElement("td");
+            td.textContent = r[key] != null ? String(r[key]) : "--";
+            tr.appendChild(td);
+          }
+          body.appendChild(tr);
+        }
       }
 
       function renderState(data) {
@@ -645,23 +975,33 @@
           renderStandings(latestLeaderboard);
         }
         const feed = data.eventFeed || [];
+        const tickerEl = document.getElementById("change-ticker");
         if (feed.length > 0) {
-          document.getElementById("change-ticker").textContent = feed[0].message || "Live updates active.";
+          tickerEl.textContent = feed[0].message || "Live updates active.";
+        } else if (latestLeaderboard.length > 0) {
+          const r = latestLeaderboard[0];
+          tickerEl.textContent = `Current leader: ${r.name} (${formatToPar(r.eventScore)})`;
         } else {
-          document.getElementById("change-ticker").textContent = "";
+          tickerEl.textContent = "Standings will populate after the first data pull.";
         }
+        renderPoolLeaderboardMini(latestLeaderboard);
         renderEventFeed(feed);
         window.__courseCard = data.courseCard || {};
         latestParticipants = data.participantDetails || [];
         populateFocusOptions(latestParticipants);
         const nextParticipantsSignature = JSON.stringify(
-          latestParticipants.map((p) => [p.name, p.eventScore, (p.picks || []).map((k) => [k.playerName, k.status, k.throughDisplay, k.dayScores])]),
+          latestParticipants.map((p) => [p.name, p.eventScore, (p.picks || []).map((k) => [k.playerName, k.status, k.statusDisplay, k.throughDisplay, k.teeTimePhoenix, k.dayScores])]),
         );
         if (nextParticipantsSignature !== participantsSignature) {
           participantsSignature = nextParticipantsSignature;
           renderParticipantDetails(latestParticipants);
         }
         renderSideGames(data.sideGameLeaders || {});
+        const nextFieldSig = JSON.stringify(data.mastersFieldLeaderboard || []);
+        if (nextFieldSig !== mastersFieldSignature) {
+          mastersFieldSignature = nextFieldSig;
+          renderMastersFieldLeaderboard(data.mastersFieldLeaderboard || []);
+        }
         prevRanks = Object.fromEntries((data.leaderboard || []).map((row) => [row.name, row.rank]));
       }
 
@@ -669,18 +1009,7 @@
         const root = document.getElementById("participant-details");
         root.innerHTML = "";
         const focusName = (document.getElementById("participant-focus") || {}).value || "";
-        const defaultCourse = {
-          holes: Array.from({ length: 18 }, (_, i) => i + 1),
-          pars: [4,5,4,3,4,3,4,5,4,4,4,3,5,4,5,3,4,4],
-          yards: [445,585,350,177,495,192,450,570,460,495,520,150,545,440,550,165,450,465],
-          outPar: 36,
-          inPar: 36,
-          totalPar: 72,
-          outYards: 3724,
-          inYards: 3780,
-          totalYards: 7504,
-        };
-        const courseCard = window.__courseCard || defaultCourse;
+        const courseCard = window.__courseCard || DEFAULT_COURSE_CARD;
         for (const participant of participants) {
           if (focusName && participant.name !== focusName) continue;
           const card = document.createElement("article");
@@ -694,38 +1023,20 @@
             { key: 3, label: "Sat" },
             { key: 4, label: "Sun" },
           ];
-          const styleClassForType = (type) => {
-            const t = (type || "").toUpperCase();
-            if (t === "ACE" || t === "HOLE_IN_ONE") return "hole-mark ace";
-            if (t === "DOUBLE_EAGLE" || t === "ALBATROSS") return "hole-mark double-eagle";
-            if (t === "EAGLE") return "hole-mark eagle";
-            if (t === "BIRDIE") return "hole-mark birdie";
-            if (t === "BOGEY") return "hole-mark bogey";
-            if (t === "DOUBLE_BOGEY" || t === "DOUBLEBOGEY") return "hole-mark double-bogey";
-            if (t === "TRIPLE_BOGEY" || t === "TRIPLEBOGEY" || t === "SNOWMAN") return "hole-mark triple-bogey";
-            if (
-              t === "QUADRUPLE_BOGEY" ||
-              t === "QUADRUPLEBOGEY" ||
-              t === "QUAD" ||
-              t === "OTHER" ||
-              t.includes("WORSE")
-            ) return "hole-mark quad-plus";
-            return "hole-mark";
-          };
-          const roundFor = (pick, day) =>
-            (pick.roundScorecards || {})[String(day)] ||
-            (pick.roundScorecards || {})[day] ||
-            { holes: [], holeTypes: [], out: 0, in: 0, total: 0, toPar: 0 };
-
           const pickRows = picks.map((pick) => {
             const scores = pick.dayScores || {};
             const total = [1, 2, 3, 4].reduce((sum, day) => sum + Number(getDailyScore(scores, day) || 0), 0);
             const fieldPos = pick.fieldPosition || "-";
             const scoreToParText = formatToPar(pick.scoreToPar);
             const throughText = pick.throughDisplay || "-";
-            const statusText = (typeof pick.status === "string" && pick.status.trim())
-              ? pick.status.trim()
-              : (throughText !== "-" ? throughText : "LIVE");
+            let statusText = typeof pick.statusDisplay === "string" && pick.statusDisplay.trim()
+              ? pick.statusDisplay.trim()
+              : (typeof pick.status === "string" && pick.status.trim())
+                ? pick.status.trim()
+                : (throughText !== "-" ? throughText : "Live");
+            if (pick.teeTimePhoenix && statusText === "Live") {
+              statusText = `${statusText} · ${pick.teeTimePhoenix}`;
+            }
             return `
               <tr>
                 <td>${pick.playerName}</td>
@@ -735,7 +1046,7 @@
                 <td>${formatToPar(getDailyScore(scores, 4))}</td>
                 <td>${fieldPos} (${scoreToParText})</td>
                 <td><strong>${formatToPar(total)}</strong></td>
-                <td class="status-cell ${statusClass(statusText)}">${statusText}</td>
+                <td class="status-cell ${statusClass(statusText.split("·")[0].trim())}">${statusText}</td>
               </tr>
             `;
           }).join("");
@@ -746,24 +1057,100 @@
           }).join("");
 
           const dayBlocks = days.map((day) => {
-            const playerRows = picks.map((pick) => {
-              const round = roundFor(pick, day.key);
+            const playerDesktopCards = picks
+              .map((pick) => buildDesktopPickScorecardArticleHtml(pick, day.key, courseCard))
+              .join("");
+            const playerMobileCards = picks.map((pick) => {
+              const round = roundForPickDay(pick, day.key);
               const holes = Array.isArray(round.holes) ? round.holes : [];
               const types = Array.isArray(round.holeTypes) ? round.holeTypes : [];
-              const holeCells = Array.from({ length: 18 }, (_, i) => {
+              const holeNumberCells = (startHole) => Array.from({ length: 9 }, (_, offset) => {
+                const holeNumber = startHole + offset;
+                return `<td>${holeNumber}</td>`;
+              }).join("");
+              const parCells = (startIndex) => Array.from({ length: 9 }, (_, offset) => {
+                const i = startIndex + offset;
+                const p = (courseCard.pars || [])[i] || "-";
+                return `<td>${p}</td>`;
+              }).join("");
+              const yardCells = (startIndex) => Array.from({ length: 9 }, (_, offset) => {
+                const i = startIndex + offset;
+                const y = (courseCard.yards || [])[i] || "-";
+                return `<td>${y}</td>`;
+              }).join("");
+              const scoreCells = (startIndex) => Array.from({ length: 9 }, (_, offset) => {
+                const i = startIndex + offset;
                 const v = holes[i] || 0;
                 const t = types[i] || "";
-                const cls = styleClassForType(t);
+                const cls = styleClassForHoleOutcome(t);
                 return `<td><span class="${cls}" title="${t || "NO SCORE"}">${v === 0 ? "-" : v}</span></td>`;
               }).join("");
+              const headChip = pickStatusChipHtml(pick);
               return `
-                <tr>
-                  <td class="player-name">${pick.playerName}</td>
-                  ${holeCells}
-                  <td>${round.out || 0}</td>
-                  <td>${round.in || 0}</td>
-                  <td><strong>${round.total || 0}</strong></td>
-                </tr>
+                <article class="scorecard-mobile-player">
+                  <div class="scorecard-mobile-player-head">${pick.playerName} ${headChip}</div>
+                  <div class="scorecard-mobile-grid">
+                    <div class="scorecard-mobile-nine">
+                      <div class="scorecard-mobile-nine-title">Front 9</div>
+                      <table class="scorecard-mobile-table">
+                        <tbody>
+                          <tr>
+                            <th>HOLE</th>
+                            ${holeNumberCells(1)}
+                            <th>OUT</th>
+                          </tr>
+                          <tr>
+                            <th>PAR</th>
+                            ${parCells(0)}
+                            <th>${courseCard.outPar || 36}</th>
+                          </tr>
+                          <tr>
+                            <th>YDS</th>
+                            ${yardCells(0)}
+                            <th>${courseCard.outYards || 3724}</th>
+                          </tr>
+                          <tr>
+                            <th>SCR</th>
+                            ${scoreCells(0)}
+                            <th>${round.out || 0}</th>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="scorecard-mobile-nine">
+                      <div class="scorecard-mobile-nine-title">Back 9</div>
+                      <table class="scorecard-mobile-table">
+                        <tbody>
+                          <tr>
+                            <th>HOLE</th>
+                            ${holeNumberCells(10)}
+                            <th>IN</th>
+                          </tr>
+                          <tr>
+                            <th>PAR</th>
+                            ${parCells(9)}
+                            <th>${courseCard.inPar || 36}</th>
+                          </tr>
+                          <tr>
+                            <th>YDS</th>
+                            ${yardCells(9)}
+                            <th>${courseCard.inYards || 3780}</th>
+                          </tr>
+                          <tr>
+                            <th>SCR</th>
+                            ${scoreCells(9)}
+                            <th>${round.in || 0}</th>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="scorecard-mobile-summary">
+                    <span>OUT ${round.out || 0}</span>
+                    <span>IN ${round.in || 0}</span>
+                    <strong>TOT ${round.total || 0}</strong>
+                  </div>
+                </article>
               `;
             }).join("");
             const activePane = day.key === activeDay ? "active" : "";
@@ -771,32 +1158,12 @@
               <div class="scorecard-day-block day-pane ${activePane}" data-day-pane="${day.key}">
                 <h4>${day.label} Scorecards</h4>
                 <div class="scorecard-wrap">
-                  <table class="scorecard-table">
-                    <thead>
-                      <tr>
-                        <th>Player</th>
-                        ${(courseCard.holes || []).map((h) => `<th>${h}</th>`).join("")}
-                        <th>OUT</th><th>IN</th><th>TOT</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>Par</td>
-                        ${(courseCard.pars || []).map((p) => `<td>${p}</td>`).join("")}
-                        <td>${courseCard.outPar || 36}</td>
-                        <td>${courseCard.inPar || 36}</td>
-                        <td>${courseCard.totalPar || 72}</td>
-                      </tr>
-                      <tr>
-                        <td>Yards</td>
-                        ${(courseCard.yards || []).map((y) => `<td>${y}</td>`).join("")}
-                        <td>${courseCard.outYards || 3724}</td>
-                        <td>${courseCard.inYards || 3780}</td>
-                        <td>${courseCard.totalYards || 7504}</td>
-                      </tr>
-                      ${playerRows}
-                    </tbody>
-                  </table>
+                  <div class="scorecard-desktop">
+                    ${playerDesktopCards}
+                  </div>
+                  <div class="scorecard-mobile">
+                    ${playerMobileCards}
+                  </div>
                 </div>
               </div>
             `;
@@ -974,7 +1341,7 @@
       });
       refreshState();
       resetRefreshCountdown();
-      setInterval(refreshState, 60000);
+      setInterval(refreshState, REFRESH_INTERVAL_MS);
       setInterval(tickRefreshCountdown, 1000);
     </script>
   </body>

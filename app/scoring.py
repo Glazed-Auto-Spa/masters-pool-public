@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -78,8 +79,47 @@ class ParticipantResult:
 
 
 def is_penalty_status(status_blob: str) -> bool:
+    """
+    True when the player is no longer accumulating competitive holes for the pool
+    (WD, DQ, missed cut, etc.). Tuned for ESPN / PGA phrasing; avoids projected cut noise.
+    """
     text = status_blob.upper()
-    return "WD" in text or "WITHDRAW" in text or "MISSED CUT" in text or "MC" in text
+    if "PROJECTED" in text:
+        return False
+    if "MADE" in text and "CUT" in text:
+        return False
+    # ESPN core API uses type.name STATUS_CUT for missed cut.
+    if "STATUS_CUT" in text:
+        return True
+    if "WITHDRAW" in text or "W/D" in text or re.search(r"(^|[^A-Z])WD([^A-Z]|$)", text):
+        return True
+    if "DISQUAL" in text or re.search(r"(^|[^A-Z])DQ([^A-Z]|$)", text):
+        return True
+    if "MISSED CUT" in text or "MISSED THE CUT" in text:
+        return True
+    if re.search(r"(^|[^A-Z])MC([^A-Z]|$)", text):
+        return True
+    # ESPN often uses shortDetail "Cut" alone for missed cut.
+    if text.strip() == "CUT":
+        return True
+    return False
+
+
+def format_pick_status_display(status_blob: str) -> str:
+    """
+    Short label for pool UI (status column / scorecard chip): MC, WD, DQ, Live, or em dash.
+    """
+    s = (status_blob or "").strip()
+    if not s:
+        return "—"
+    if is_penalty_status(s):
+        u = s.upper()
+        if "WITHDRAW" in u or "W/D" in u or re.search(r"(^|[^A-Z])WD([^A-Z]|$)", u):
+            return "WD"
+        if "DISQUAL" in u or re.search(r"(^|[^A-Z])DQ([^A-Z]|$)", u):
+            return "DQ"
+        return "MC"
+    return "Live"
 
 
 def score_participants(
@@ -298,6 +338,7 @@ def _build_pick_detail(
         "playerId": player_id,
         "playerName": player_name,
         "status": status,
+        "statusDisplay": format_pick_status_display(status),
         "dayScores": day_scores,
         "counted": counted,
         "roundScorecards": round_scorecards,
