@@ -2629,10 +2629,6 @@ tbody tr:hover {
   filter: brightness(1.05);
 }
 
-body.skin-masters-v7 {
-  --v7-readable-max: min(100%, 58rem);
-}
-
 .skin-masters-v7 .container {
   max-width: 1520px;
   margin-top: 18px;
@@ -3237,13 +3233,6 @@ body.skin-masters-v7 {
   box-shadow: var(--v7-shadow-1);
 }
 
-.skin-masters-v7 .participant-section {
-  max-width: var(--v7-readable-max);
-  margin-left: auto;
-  margin-right: auto;
-  box-sizing: border-box;
-}
-
 /* Site-wide “scorecard” language: light matrix grids + white shells (matches HOLE/PAR/YDS tables). */
 .skin-masters-v7 .participant-card {
   background: #fff;
@@ -3411,7 +3400,7 @@ body.skin-masters-v7 {
   background: #f5f9fa;
   border: 1px solid #e3ebef;
   border-radius: 8px;
-  max-width: 58rem;
+  max-width: none;
   box-sizing: border-box;
 }
 
@@ -3431,9 +3420,6 @@ body.skin-masters-v7 {
 
 .skin-masters-v7 .payout-settlement {
   margin-top: 28px;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: var(--v7-readable-max);
   padding: 18px 0 8px;
   border-top: 1px solid #dce6eb;
   box-sizing: border-box;
