@@ -3199,8 +3199,11 @@ tbody tr:hover {
 
 .skin-masters-v7 .pool-only-charts-wrap {
   margin-top: 28px;
+  margin-bottom: 28px;
   padding-top: 20px;
+  padding-bottom: 4px;
   border-top: 2px solid #e8c9c9;
+  border-bottom: 1px solid #e8e4e0;
 }
 
 .skin-masters-v7 .pool-only-charts-title {
