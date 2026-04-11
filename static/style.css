@@ -3618,14 +3618,6 @@ tbody tr:hover {
   color: #1d3b4a;
 }
 
-.skin-masters-v7 .payout-venmo-profile {
-  display: inline-block;
-  margin-right: 10px;
-  font-weight: 600;
-  font-size: 0.78rem;
-  color: #1d5f85;
-}
-
 .skin-masters-v7 .payout-venmo-note {
   margin: 0 0 10px;
   font-size: 0.76rem;
@@ -3642,19 +3634,47 @@ tbody tr:hover {
   overflow-x: auto;
 }
 
-.skin-masters-v7 .payout-copy-phone {
-  margin-left: 6px;
-  padding: 4px 10px;
-  font-size: 0.72rem;
-  border-radius: 6px;
-  border: 1px solid #c9d6de;
-  background: #f2f7fa;
-  cursor: pointer;
+.skin-masters-v7 .payout-venmo-pay {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: #1d5f85;
+  text-decoration: none;
+}
+
+.skin-masters-v7 .payout-venmo-pay:hover {
+  text-decoration: underline;
+}
+
+.skin-masters-v7 .payout-no-venmo {
+  color: #8a9aa3;
+  font-size: 0.82rem;
+}
+
+.skin-masters-v7 .payout-transfer-venmo-footer {
+  margin-top: 10px;
+  padding: 10px 12px 12px;
+  border: 1px solid #d9e4ea;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.skin-masters-v7 .payout-transfer-venmo-footer-title {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1d3b4a;
+}
+
+.skin-masters-v7 .payout-transfer-venmo-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
   color: #2f4956;
 }
 
-.skin-masters-v7 .payout-copy-phone:hover {
-  background: #e8f0f4;
+.skin-masters-v7 .payout-transfer-venmo-list li {
+  margin-bottom: 4px;
 }
 
 .skin-masters-v7 .pick-table tbody td:first-child {

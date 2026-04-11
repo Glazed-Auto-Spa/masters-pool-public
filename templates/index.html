@@ -14,20 +14,20 @@
       {%- endif -%}
     {%- endif -%}
   {%- endmacro %}
-  {# Optional per person: "profile_url": "https://venmo.com/u/Your-Venmo-Handle" — Venmo does not support reliable pay-by-phone deep links. #}
+  {# Per person: venmo_handle (no @) — links use https://venmo.com/&lt;handle&gt;. Optional pay_url overrides the link target. #}
   {% set venmo_directory = {
-    "Mark": {"phone": "6027157043"},
-    "Steve": {"phone": "6106396553"},
-    "Alfredo": {"phone": "6023996274"},
-    "Eric": {"phone": "5208087265"},
-    "Amrit": {"phone": "2623583389"},
-    "Sajiv": {"phone": "2486356169"},
+    "Steve": {"venmo_handle": "XihuaYang"},
+    "Alfredo": {"venmo_handle": "Alfredo-Cobon-1"},
+    "Mark": {"venmo_handle": "MarkScheuren"},
+    "Eric": {"venmo_handle": "EricShaffer1212"},
+    "Amrit": {"venmo_handle": "Amrit-Maan-3"},
+    "Sajiv": {"venmo_handle": "SajivSethi"},
   } %}
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412j') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412k') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -542,44 +542,37 @@
         <div class="payout-venmo-directory">
           <h3 class="payout-venmo-directory-title">Venmo directory</h3>
           <p class="payout-venmo-note">
-            Venmo does <strong>not</strong> expose a supported way to open a payment to someone using only a phone number
-            (links that pass a number usually open the app but show &ldquo;not found&rdquo;). Use
-            <strong>Copy number</strong>, then in Venmo tap <strong>Pay</strong> / search and paste the number, or find them
-            in your contacts. Optional: add each person&rsquo;s public
-            <a href="https://help.venmo.com/hc/en-us/articles/235377287-18376507633165" target="_blank" rel="noopener noreferrer">Venmo profile URL</a>
-            in <code>templates/index.html</code> as <code>profile_url</code> next to <code>phone</code> to show a working
-            <strong>Venmo profile</strong> button. Open
-            <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">venmo.com</a> or the Venmo app and use
-            <strong>Search</strong> with the copied number.
+            Tap a handle to open that person on
+            <a href="https://venmo.com/" target="_blank" rel="noopener noreferrer">Venmo</a> (web or app) so you can send
+            payment. The same links appear under <strong>Who pays whom</strong> for everyone listed as a payee there.
           </p>
           <div class="payout-venmo-table-wrap">
             <table class="pick-table payout-venmo-table">
               <thead>
                 <tr>
                   <th>Participant</th>
-                  <th>Phone (on file)</th>
-                  <th>Actions</th>
+                  <th>Pay on Venmo</th>
                 </tr>
               </thead>
               <tbody>
-                {% for name, entry in venmo_directory.items() %}
-                {% set phone = entry.phone %}
+                {% for p in config.participants %}
+                {% set name = p.name %}
+                {% set entry = venmo_directory.get(name) %}
+                {% if entry and entry.get("venmo_handle") %}
+                {% set h = entry.venmo_handle %}
                 <tr>
                   <td>{{ name }}</td>
-                  <td><span class="payout-phone-digits">+1 {{ phone[:3] }} {{ phone[3:6] }} {{ phone[6:] }}</span></td>
-                  <td class="payout-venmo-actions">
-                    {% if entry.get("profile_url") %}
+                  <td>
                     <a
-                      class="payout-venmo-profile"
-                      href="{{ entry.profile_url }}"
+                      class="payout-venmo-pay"
+                      href="https://venmo.com/{{ h }}"
                       target="_blank"
                       rel="noopener noreferrer"
-                      >Venmo profile</a
+                      >@{{ h }}</a
                     >
-                    {% endif %}
-                    <button type="button" class="payout-copy-phone" data-phone="{{ phone }}">Copy number</button>
                   </td>
                 </tr>
+                {% endif %}
                 {% endfor %}
               </tbody>
             </table>
@@ -871,11 +864,33 @@
         return `$${Math.round(x)}`;
       }
 
-      function venmoDigitsForName(name) {
+      function venmoEntryForName(name) {
         const raw = VENMO_DIRECTORY[name];
-        if (!raw) return "";
-        const phone = typeof raw === "string" ? raw : raw.phone;
-        return phone ? String(phone).replace(/\D/g, "") : "";
+        if (!raw || typeof raw !== "object") return null;
+        return raw;
+      }
+
+      function venmoHandleForName(name) {
+        const e = venmoEntryForName(name);
+        if (!e || !e.venmo_handle) return "";
+        return String(e.venmo_handle).trim().replace(/^@+/, "");
+      }
+
+      function venmoPayUrlForName(name) {
+        const e = venmoEntryForName(name);
+        if (e && e.pay_url) return String(e.pay_url).trim();
+        const h = venmoHandleForName(name);
+        return h ? `https://venmo.com/${encodeURIComponent(h)}` : "";
+      }
+
+      function venmoPayLinkHtml(name) {
+        const h = venmoHandleForName(name);
+        const url = venmoPayUrlForName(name);
+        if (!h || !url) {
+          return `<span class="payout-no-venmo" title="Add venmo_handle in templates/index.html">—</span>`;
+        }
+        const at = `@${h}`;
+        return `<a class="payout-venmo-pay" href="${escapeHtmlPayout(url)}" target="_blank" rel="noopener noreferrer">${escapeHtmlPayout(at)}</a>`;
       }
 
       function payoutMainValue(row) {
@@ -992,7 +1007,7 @@
           .join("");
 
         html += `<h3 class="payout-subhead">Per-participant totals</h3>
-          <p class="payout-table-note">Columns: main event payout (full pot to 1st on these standings), raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Total if pool paid out</strong> (main + side net after the zero-sum split). No buy-ins collected yet. Use the <strong>Venmo directory</strong> below for payee phones.</p>
+          <p class="payout-table-note">Columns: main event payout (full pot to 1st on these standings), raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Total if pool paid out</strong> (main + side net after the zero-sum split). No buy-ins collected yet. Use the <strong>Venmo directory</strong> below for payee handles.</p>
           <div class="payout-table-scroll">
           <table class="pick-table payout-breakdown-table">
             <thead><tr>
@@ -1023,9 +1038,10 @@
             "<tr><td colspan=\"4\" class=\"payout-empty-row\">No payment chain needed — amounts net to $0 under the worksheet rules.</td></tr>";
         }
 
+        let xferSourceForPayees = transfers;
         if (focus) {
-          xferRows = transfers
-            .filter((t) => t.from === focus || t.to === focus)
+          xferSourceForPayees = transfers.filter((t) => t.from === focus || t.to === focus);
+          xferRows = xferSourceForPayees
             .map((t) => {
               const youPay = t.from === focus;
               return `<tr>
@@ -1039,13 +1055,25 @@
           if (!xferRows) {
             xferRows =
               "<tr><td colspan=\"4\" class=\"payout-empty-row\">No direct transfers list for you in this minimal settlement.</td></tr>";
+            xferSourceForPayees = [];
           }
+        }
+
+        const payeeNames = [...new Set(xferSourceForPayees.map((t) => t.to))].sort((a, b) =>
+          a.localeCompare(b, "en"),
+        );
+        let xferVenmoFooter = "";
+        if (payeeNames.length) {
+          const payeeItems = payeeNames
+            .map((n) => `<li><strong>${escapeHtmlPayout(n)}</strong> — ${venmoPayLinkHtml(n)}</li>`)
+            .join("");
+          xferVenmoFooter = `<div class="payout-transfer-venmo-footer"><p class="payout-transfer-venmo-footer-title">Pay on Venmo (recipients in the table above)</p><ul class="payout-transfer-venmo-list">${payeeItems}</ul></div>`;
         }
 
         html += `<h3 class="payout-subhead">${focus ? `Transfers involving ${escapeHtmlPayout(focus)}` : "Who pays whom (minimal transfers)"}</h3>
           <p class="payout-table-note">Each amount <strong>includes main-event and side-game settlement</strong> under the assumption above (everyone still owes their <strong>${formatMoneyPayout(
             POOL_BUY_IN,
-          )}</strong> buy-in into the pool). Use the <strong>Venmo directory</strong> at the bottom for phone numbers and optional profile links.</p>
+          )}</strong> buy-in into the pool). Use the <strong>Venmo directory</strong> at the bottom for handles, or the links under this table.</p>
           <div class="payout-table-scroll">
           <table class="pick-table payout-transfer-table">
             <thead><tr>
@@ -1055,7 +1083,7 @@
               <th>Amount</th>
             </tr></thead>
             <tbody>${xferRows}</tbody>
-          </table></div>`;
+          </table></div>${xferVenmoFooter}`;
 
         if (focus) {
           const me = positions.find((p) => p.name === focus);
@@ -1690,26 +1718,6 @@
       if (payoutFocusEl) {
         payoutFocusEl.addEventListener("change", () => {
           renderPayoutSettlement(latestLeaderboard);
-        });
-      }
-      const payoutSection = document.getElementById("payout-settlement");
-      if (payoutSection) {
-        payoutSection.addEventListener("click", async (e) => {
-          const btn = e.target.closest(".payout-copy-phone");
-          if (!btn) return;
-          const raw = btn.getAttribute("data-phone") || "";
-          const digits = raw.replace(/\D/g, "");
-          const text = digits.length === 10 ? `+1${digits}` : raw;
-          try {
-            await navigator.clipboard.writeText(text);
-            const prev = btn.textContent;
-            btn.textContent = "Copied!";
-            setTimeout(() => {
-              btn.textContent = prev;
-            }, 1800);
-          } catch {
-            window.prompt("Copy this number:", text);
-          }
         });
       }
       document.getElementById("download-standings").addEventListener("click", async () => {
