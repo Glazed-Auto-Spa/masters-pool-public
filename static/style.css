@@ -2629,6 +2629,10 @@ tbody tr:hover {
   filter: brightness(1.05);
 }
 
+body.skin-masters-v7 {
+  --v7-readable-max: min(100%, 58rem);
+}
+
 .skin-masters-v7 .container {
   max-width: 1520px;
   margin-top: 18px;
@@ -3219,6 +3223,13 @@ tbody tr:hover {
   box-shadow: var(--v7-shadow-1);
 }
 
+.skin-masters-v7 .participant-section {
+  max-width: var(--v7-readable-max);
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
 /* Site-wide “scorecard” language: light matrix grids + white shells (matches HOLE/PAR/YDS tables). */
 .skin-masters-v7 .participant-card {
   background: #fff;
@@ -3396,8 +3407,12 @@ tbody tr:hover {
 
 .skin-masters-v7 .payout-settlement {
   margin-top: 28px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: var(--v7-readable-max);
   padding: 18px 0 8px;
   border-top: 1px solid #dce6eb;
+  box-sizing: border-box;
 }
 
 .skin-masters-v7 .payout-settlement h2 {
@@ -3412,7 +3427,7 @@ tbody tr:hover {
   font-size: 0.84rem;
   line-height: 1.5;
   color: #4a6270;
-  max-width: 58rem;
+  max-width: none;
 }
 
 .skin-masters-v7 .payout-disclaimer--secondary {
@@ -3451,7 +3466,7 @@ tbody tr:hover {
   background: #f4faf7;
   border: 1px solid #d5e8dc;
   border-radius: 8px;
-  max-width: 58rem;
+  max-width: none;
 }
 
 .skin-masters-v7 .payout-settlement-output {
@@ -3480,7 +3495,18 @@ tbody tr:hover {
   font-size: 0.82rem;
   line-height: 1.45;
   color: #4a6270;
-  max-width: 58rem;
+  max-width: none;
+}
+
+.skin-masters-v7 .payout-main-payee {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #1d3b4a;
+  background: #f7fafb;
+  border: 1px solid #d0dde4;
+  border-radius: 8px;
 }
 
 .skin-masters-v7 .payout-pool-summary p {
@@ -3498,7 +3524,7 @@ tbody tr:hover {
   font-size: 0.76rem;
   line-height: 1.45;
   color: #617783;
-  max-width: 58rem;
+  max-width: none;
 }
 
 .skin-masters-v7 .payout-table-scroll {
@@ -3511,7 +3537,8 @@ tbody tr:hover {
 .skin-masters-v7 .payout-breakdown-table,
 .skin-masters-v7 .payout-transfer-table,
 .skin-masters-v7 .payout-venmo-table {
-  min-width: 520px;
+  min-width: 0;
+  width: 100%;
 }
 
 .skin-masters-v7 .payout-num {
@@ -3557,7 +3584,7 @@ tbody tr:hover {
   border: 1px solid #e3ebef;
   border-radius: 8px;
   background: #fbfdff;
-  max-width: 42rem;
+  max-width: none;
 }
 
 .skin-masters-v7 .payout-you-list {
