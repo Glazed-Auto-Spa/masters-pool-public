@@ -3360,6 +3360,40 @@ tbody tr:hover {
   background: #f0f6fa;
 }
 
+.skin-masters-v7 #standings thead th .standings-col-asterisk {
+  display: inline-block;
+  margin-left: 3px;
+  font-size: 0.95em;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #8a4a16;
+  vertical-align: 0.06em;
+}
+
+.skin-masters-v7 .standings-footnote {
+  margin: 10px 0 0;
+  padding: 9px 12px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #4a6270;
+  background: #f5f9fa;
+  border: 1px solid #e3ebef;
+  border-radius: 8px;
+  max-width: 58rem;
+  box-sizing: border-box;
+}
+
+.skin-masters-v7 .standings-footnote .standings-col-asterisk {
+  margin-right: 5px;
+  font-weight: 800;
+  color: #8a4a16;
+}
+
+.skin-masters-v7 .standings-footnote strong {
+  color: #2f4956;
+}
+
 .skin-masters-v7 .pick-table tbody td:first-child {
   font-weight: 700;
   color: #1d3b4a;

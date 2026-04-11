@@ -18,7 +18,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260411l') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260411m') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -214,8 +214,12 @@
               <th>Participant</th>
               <th>Thu</th>
               <th>Fri</th>
-              <th>Sat</th>
-              <th>Sun</th>
+              <th aria-describedby="standings-weekend-footnote">
+                Sat<span class="standings-col-asterisk" aria-hidden="true">*</span>
+              </th>
+              <th aria-describedby="standings-weekend-footnote">
+                Sun<span class="standings-col-asterisk" aria-hidden="true">*</span>
+              </th>
               <th>Total</th>
               <th>Main Event Payout</th>
               <th>Eagles ($50)</th>
@@ -264,6 +268,12 @@
             {% endfor %}
           </tbody>
         </table>
+        <p class="standings-footnote" id="standings-weekend-footnote">
+          <span class="standings-col-asterisk" aria-hidden="true">*</span>
+          <strong>Saturday and Sunday.</strong>
+          For picks no longer in the field (missed cut, withdrawal, disqualification, and similar), these columns still count toward the team daily total.
+          Their Saturday and Sunday values use the <strong>Thursday/Friday average to par</strong> carry already applied in the live feed, so each day remains a full eight-pick sum.
+        </p>
       </section>
 
       <section class="mobile-sidegame-standings">
