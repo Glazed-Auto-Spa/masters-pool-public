@@ -3917,14 +3917,14 @@ tbody tr:hover {
   }
 
   .skin-masters-v7 .pick-mobile-card-head {
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
   .skin-masters-v7 .pick-mobile-name {
     font-weight: 700;
     font-size: 0.88rem;
     color: #1d3b4a;
-    line-height: 1.25;
+    line-height: 1.2;
     display: block;
   }
 
@@ -3932,76 +3932,71 @@ tbody tr:hover {
     border: 1px solid #e3ebef;
     border-radius: 8px;
     background: #fff;
-    padding: 8px 10px 7px;
+    padding: 6px 8px 6px;
   }
 
   .skin-masters-v7 .pick-mobile-status-row {
-    margin-bottom: 6px;
-    padding-bottom: 6px;
+    margin-bottom: 0;
+    padding-bottom: 5px;
     border-bottom: 1px solid #eef2f4;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 4px;
   }
 
-  .skin-masters-v7 .pick-mobile-day-grid {
+  .skin-masters-v7 .pick-mobile-scores-row {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 6px 12px;
-    margin-bottom: 6px;
-    padding: 4px 0 2px;
-    border-bottom: 1px solid #eef2f4;
-  }
-
-  .skin-masters-v7 .pick-mobile-metric {
-    text-align: center;
-    border: none;
-    border-radius: 0;
-    padding: 0 2px;
-    background: transparent;
-    min-width: 2.4rem;
-  }
-
-  .skin-masters-v7 .pick-mobile-metric-lbl {
-    display: block;
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #5a7382;
-    margin-bottom: 2px;
-  }
-
-  .skin-masters-v7 .pick-mobile-metric-val {
-    font-size: 0.78rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
+    align-items: baseline;
+    gap: 4px 6px;
+    padding-top: 5px;
+    font-size: 0.68rem;
+    line-height: 1.28;
     color: #1d3b4a;
   }
 
-  .skin-masters-v7 .pick-mobile-foot {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 8px 12px;
-    padding-top: 6px;
-    border-top: 1px solid #e3ebef;
+  .skin-masters-v7 .pick-mobile-inline-seg {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
 
-  .skin-masters-v7 .pick-mobile-foot-item {
+  .skin-masters-v7 .pick-mobile-inline-seg--total {
+    padding-left: 4px;
+    border-left: 1px solid #dce6eb;
+    margin-left: 2px;
+  }
+
+  .skin-masters-v7 .pick-mobile-inline-seg--field {
     min-width: 0;
+    white-space: normal;
+  }
+
+  .skin-masters-v7 .pick-mobile-inline-lbl {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #5a7382;
+  }
+
+  .skin-masters-v7 .pick-mobile-inline-val {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #1d3b4a;
   }
 
   .skin-masters-v7 .pick-mobile-total {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 700;
   }
 
   .skin-masters-v7 .pick-mobile-sub {
     font-weight: 500;
-    font-size: 0.72rem;
+    font-size: 0.65rem;
     color: #5a7382;
   }
 
