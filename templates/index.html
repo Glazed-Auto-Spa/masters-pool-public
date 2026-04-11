@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412n') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412o') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -840,7 +840,6 @@
       }
 
       function buildPickMobileStackHtml(picks) {
-        const dayNames = ["Thursday", "Friday", "Saturday", "Sunday"];
         return (picks || [])
           .map((pick) => {
             const scores = pick.dayScores || {};
@@ -851,23 +850,22 @@
             const statusRow =
               pickStatusChipHtml(pick) ||
               `<span class="status-cell ${statusClass(statusText)}">${statusText}</span>`;
-            const daySegs = [1, 2, 3, 4]
+            const dayCells = [1, 2, 3, 4]
               .map((d) => {
-                const lbl = dayNames[d - 1];
-                return `<span class="pick-mobile-inline-seg"><span class="pick-mobile-inline-lbl">${lbl}</span><span class="pick-mobile-inline-val">${formatToPar(
+                const lbl = ["Thu", "Fri", "Sat", "Sun"][d - 1];
+                return `<div class="pick-mobile-metric"><span class="pick-mobile-metric-lbl">${lbl}</span><span class="pick-mobile-metric-val">${formatToPar(
                   getDailyScore(scores, d),
-                )}</span></span>`;
+                )}</span></div>`;
               })
               .join("");
-            const scoresRow = `<div class="pick-mobile-scores-row" aria-label="Daily scores, total, and field">${daySegs}<span class="pick-mobile-inline-seg pick-mobile-inline-seg--total"><span class="pick-mobile-inline-lbl">Total</span><strong class="pick-mobile-total">${formatToPar(
-              total,
-            )}</strong></span><span class="pick-mobile-inline-seg pick-mobile-inline-seg--field"><span class="pick-mobile-inline-lbl">Field</span><span class="pick-mobile-inline-val">${fieldPos}<span class="pick-mobile-sub"> (${scoreToParText})</span></span></span></div>`;
+            const fieldCell = `<div class="pick-mobile-metric pick-mobile-metric--meta"><span class="pick-mobile-metric-lbl">Field</span><span class="pick-mobile-metric-val">${fieldPos} <span class="pick-mobile-sub">(${scoreToParText})</span></span></div>`;
+            const totalCell = `<div class="pick-mobile-metric pick-mobile-metric--meta"><span class="pick-mobile-metric-lbl">Total</span><strong class="pick-mobile-total">${formatToPar(total)}</strong></div>`;
             return `
         <div class="pick-mobile-card">
           <div class="pick-mobile-card-head"><span class="pick-mobile-name">${pick.playerName}</span></div>
           <div class="pick-mobile-card-inner">
             <div class="pick-mobile-status-row">${statusRow}</div>
-            ${scoresRow}
+            <div class="pick-mobile-day-grid">${dayCells}${fieldCell}${totalCell}</div>
           </div>
         </div>`;
           })
