@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412l') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412m') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -561,12 +561,14 @@
                 {% set raw = ((p.venmo_handle or "") | trim) or ((entry.get("venmo_handle", "") if entry else "") | trim) %}
                 {% set h = ((raw[1:]) if raw and raw[0:1] == "@" else raw) | trim %}
                 {% if h %}
+                {% set venmo_app = "venmo://paycharge?txn=pay&recipients=" ~ (h | urlencode) ~ "&note=" ~ ("Masters pool" | urlencode) %}
                 <tr>
                   <td>{{ name }}</td>
                   <td>
                     <a
                       class="payout-venmo-pay"
                       href="https://venmo.com/{{ h }}"
+                      data-venmo-app="{{ venmo_app }}"
                       target="_blank"
                       rel="noopener noreferrer"
                       >@{{ h }}</a
@@ -912,6 +914,17 @@
         return h ? `https://venmo.com/${encodeURIComponent(h)}` : "";
       }
 
+      function venmoAppPayUrlFromHandle(h) {
+        const u = String(h || "").trim();
+        if (!u) return "";
+        const note = encodeURIComponent("Masters pool");
+        return `venmo://paycharge?txn=pay&recipients=${encodeURIComponent(u)}&note=${note}`;
+      }
+
+      function isPayoutVenmoMobileLayout() {
+        return window.matchMedia("(max-width: 960px)").matches;
+      }
+
       function venmoPayLinkHtml(name) {
         const h = venmoHandleForName(name);
         const url = venmoPayUrlForName(name);
@@ -919,7 +932,9 @@
           return `<span class="payout-no-venmo" title="Add venmo_handle in templates/index.html">—</span>`;
         }
         const at = `@${h}`;
-        return `<a class="payout-venmo-pay" href="${escapeHtmlPayout(url)}" target="_blank" rel="noopener noreferrer">${escapeHtmlPayout(at)}</a>`;
+        const app = venmoAppPayUrlFromHandle(h);
+        const dataApp = app ? ` data-venmo-app="${escapeHtmlPayout(app)}"` : "";
+        return `<a class="payout-venmo-pay"${dataApp} href="${escapeHtmlPayout(url)}" target="_blank" rel="noopener noreferrer">${escapeHtmlPayout(at)}</a>`;
       }
 
       function payoutMainValue(row) {
@@ -1102,7 +1117,7 @@
         html += `<h3 class="payout-subhead">${focus ? `Transfers involving ${escapeHtmlPayout(focus)}` : "Who pays whom (minimal transfers)"}</h3>
           <p class="payout-table-note">Each amount <strong>includes main-event and side-game settlement</strong> under the assumption above (everyone still owes their <strong>${formatMoneyPayout(
             POOL_BUY_IN,
-          )}</strong> buy-in into the pool). Use the <strong>Venmo directory</strong> at the bottom for handles, or the links under this table.</p>
+          )}</strong> buy-in into the pool). Use the <strong>Venmo directory</strong> at the bottom for handles<span class="payout-transfer-venmo-note-desktop">, or the links under this table</span>.</p>
           <div class="payout-table-scroll">
           <table class="pick-table payout-transfer-table">
             <thead><tr>
@@ -1747,6 +1762,18 @@
       if (payoutFocusEl) {
         payoutFocusEl.addEventListener("change", () => {
           renderPayoutSettlement(latestLeaderboard);
+        });
+      }
+      const payoutVenmoSection = document.getElementById("payout-settlement");
+      if (payoutVenmoSection) {
+        payoutVenmoSection.addEventListener("click", (e) => {
+          const a = e.target.closest("a.payout-venmo-pay");
+          if (!a) return;
+          if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          const app = a.getAttribute("data-venmo-app");
+          if (!app || !isPayoutVenmoMobileLayout()) return;
+          e.preventDefault();
+          window.location.assign(app);
         });
       }
       document.getElementById("download-standings").addEventListener("click", async () => {
