@@ -106,22 +106,13 @@ def is_penalty_status(status_blob: str) -> bool:
     return False
 
 
-def _is_missed_cut_penalty(status_blob: str) -> bool:
-    """Missed cut only — not WD/DQ (those keep full cumulative carry)."""
-    if not is_penalty_status(status_blob):
-        return False
-    s = status_blob.upper()
-    if "WITHDRAW" in s or "W/D" in s or re.search(r"(^|[^A-Z])WD([^A-Z]|$)", s):
-        return False
-    if "DISQUAL" in s or re.search(r"(^|[^A-Z])DQ([^A-Z]|$)", s):
-        return False
-    return True
-
-
-def _mc_floored_avg_pre_cut_to_par(player: PlayerSnapshot) -> int | None:
+def _floored_avg_thu_fri_to_par(player: PlayerSnapshot) -> int | None:
     """
-    For missed cut: Thu+Fri (rounds 1–2) to-par averaged with math.floor, used for Sat/Sun each.
-    If only aggregate total_to_par exists (no per-round rows), assume two counting rounds: floor(total/2).
+    Floored average of Thursday + Friday (rounds 1–2) score-to-par, used for Sat/Sun for any
+    player who is not playing the rest of the tournament (MC, WD, DQ).
+
+    If only aggregate ``total_to_par`` exists (no R1/R2 rows), use ``floor(total / 2)`` (two
+    counting rounds). If only one of Thu/Fri exists, average is over that single round.
     """
     pre: list[int] = []
     for rn in (1, 2):
@@ -182,11 +173,14 @@ def score_participants(
                     continue
 
                 round_data = player.rounds.get(round_number)
-                if round_data is not None:
+                # Not playing the weekend (MC/WD/DQ): Sat/Sun must use floored Thu+Fri average only.
+                # ESPN may still attach R3/R4 rows with cumulative or placeholder to_par — ignore them.
+                if is_penalty_status(player.status or "") and day >= 3:
+                    carried = _carry_forward_score(player)
+                    score = carried if carried is not None else 0
+                elif round_data is not None:
                     score = round_data.to_par
                 else:
-                    # Missed cut: floored average of Thu+Fri to-par for each of Sat/Sun.
-                    # WD/DQ: full cumulative to each remaining day.
                     carried = _carry_forward_score(player)
                     score = carried if carried is not None else 0
 
@@ -451,12 +445,9 @@ def _streak_bonus(player: PlayerSnapshot) -> int:
 def _carry_forward_score(player: PlayerSnapshot) -> int | None:
     if not is_penalty_status(player.status):
         return None
-    if _is_missed_cut_penalty(player.status or ""):
-        mc = _mc_floored_avg_pre_cut_to_par(player)
-        if mc is not None:
-            return mc
-    if player.total_to_par is not None:
-        return int(player.total_to_par)
+    avg = _floored_avg_thu_fri_to_par(player)
+    if avg is not None:
+        return avg
     if not player.rounds:
         return 0
     return sum(round_data.to_par for round_data in player.rounds.values())
