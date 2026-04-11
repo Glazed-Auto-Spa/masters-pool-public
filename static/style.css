@@ -2739,60 +2739,22 @@ tbody tr:hover {
 .skin-masters-v7 .masters-field-leaderboard-table {
   width: 100%;
   margin: 0;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
-.skin-masters-v7 .masters-field-leaderboard-table thead th.masters-lb-col-ps {
-  width: 17%;
-  max-width: 3.35rem;
+.skin-masters-v7 .masters-field-leaderboard-table th:nth-child(1),
+.skin-masters-v7 .masters-field-leaderboard-table td:nth-child(1) {
+  width: 3rem;
   text-align: center;
-  padding-left: 4px;
-  padding-right: 4px;
+  white-space: nowrap;
 }
 
-.skin-masters-v7 .masters-field-leaderboard-table .masters-lb-ps {
+.skin-masters-v7 .masters-field-leaderboard-table th:nth-child(3),
+.skin-masters-v7 .masters-field-leaderboard-table td:nth-child(3),
+.skin-masters-v7 .masters-field-leaderboard-table th:nth-child(4),
+.skin-masters-v7 .masters-field-leaderboard-table td:nth-child(4) {
+  width: 4.25rem;
   text-align: center;
-  vertical-align: middle;
-  padding: 4px 5px;
-  font-size: 0.7rem;
-  line-height: 1.12;
-}
-
-.skin-masters-v7 .masters-field-leaderboard-table .masters-lb-ps .lb-pos {
-  display: block;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-.skin-masters-v7 .masters-field-leaderboard-table .masters-lb-ps .lb-scr {
-  display: block;
-  font-weight: 600;
-  color: #1d3b4a;
-  font-variant-numeric: tabular-nums;
-}
-
-.skin-masters-v7 .masters-field-leaderboard-table td.masters-lb-player {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 5px 8px;
-  padding: 5px 7px;
-  min-width: 0;
-}
-
-.skin-masters-v7 .masters-field-leaderboard-table td.masters-lb-player .lb-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-weight: 600;
-  font-size: 0.76rem;
-}
-
-.skin-masters-v7 .masters-field-leaderboard-table td.masters-lb-player .lb-thru,
-.skin-masters-v7 .masters-field-leaderboard-table td.masters-lb-player .lb-holes {
-  flex: 0 0 auto;
-  font-size: 0.68rem;
-  color: #5a7382;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -3010,8 +2972,9 @@ tbody tr:hover {
 }
 
 .skin-masters-v7 .participant-totals strong {
-  background: #eaf5ee;
-  color: #1f5b40;
+  background: #f0f3f6;
+  color: #1d3b4a;
+  border-color: #d4dde4;
 }
 
 .skin-masters-v7 .move-pill {
@@ -3558,17 +3521,16 @@ tbody tr:hover {
   }
 
   .skin-masters-v7 .pick-mobile-card-inner {
-    border: 1px solid #d9e4ea;
+    border: 1px solid #e3ebef;
     border-radius: 8px;
-    background: #fbfdff;
-    padding: 8px 8px 7px;
-    box-shadow: var(--v7-shadow-1);
+    background: #fff;
+    padding: 8px 10px 7px;
   }
 
   .skin-masters-v7 .pick-mobile-status-row {
-    margin-bottom: 8px;
-    padding-bottom: 7px;
-    border-bottom: 1px solid #e3ebef;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #eef2f4;
     font-size: 0.72rem;
     display: flex;
     flex-wrap: wrap;
@@ -3577,18 +3539,22 @@ tbody tr:hover {
   }
 
   .skin-masters-v7 .pick-mobile-day-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 4px 6px;
-    margin-bottom: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px 12px;
+    margin-bottom: 6px;
+    padding: 4px 0 2px;
+    border-bottom: 1px solid #eef2f4;
   }
 
   .skin-masters-v7 .pick-mobile-metric {
     text-align: center;
-    border: 1px solid #e3ebef;
-    border-radius: 6px;
-    padding: 4px 2px;
-    background: #fff;
+    border: none;
+    border-radius: 0;
+    padding: 0 2px;
+    background: transparent;
+    min-width: 2.4rem;
   }
 
   .skin-masters-v7 .pick-mobile-metric-lbl {
