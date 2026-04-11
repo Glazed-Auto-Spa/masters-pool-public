@@ -7,6 +7,7 @@ from pathlib import Path
 from flask import Flask, jsonify, render_template, request
 
 from app.config import load_runtime_config
+from app.scoring import DAILY_WINNER_BONUS_DOLLARS
 from app.service import PoolService
 
 
@@ -31,7 +32,12 @@ def create_app(base_dir: Path) -> Flask:
                 state = service.poll_once()
             except Exception:  # noqa: BLE001
                 state = {}
-        return render_template("index.html", state=state, config=config)
+        return render_template(
+            "index.html",
+            state=state,
+            config=config,
+            daily_winner_bonus_dollars=DAILY_WINNER_BONUS_DOLLARS,
+        )
 
     @app.get("/api/state")
     def api_state():

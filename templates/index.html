@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412q') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412s') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -583,80 +583,15 @@
         </div>
       </section>
 
-      <div class="pool-only-charts-wrap">
+      <div class="pool-only-charts-wrap" id="payout-pool-only-wrap">
         <h2 class="pool-only-charts-title">For this pool only</h2>
         <p class="pool-only-charts-note">
-          Side games on <strong>Thursday (day one)</strong> are not included. <strong>Daily winner</strong> payouts are handled
-          separately each day and are <strong>not</strong> shown here. Eagles, aces, and birdie streaks count only
-          <strong>Friday through Sunday</strong> (rounds 2–4). The <strong>Total</strong> column in the first table is only
-          Fri + Sat + Sun team scores (Thursday excluded).
+          The three tables below match the payout worksheets, but <strong>Thursday (round 1) side-game scoring</strong> is omitted
+          for eagles, aces, and streaks (Friday–Sunday only). The <strong>Daily</strong> column is <strong>$0</strong> here because
+          daily winner money is settled <strong>off-sheet each day</strong> (see the third table). All other sections of this site
+          still use the full rules (all rounds and pooled daily bonuses).
         </p>
-        <section class="mobile-daily-tiebreak-standings pool-only-charts-section" aria-labelledby="pool-only-daily-title">
-          <h3 id="pool-only-daily-title">Daily scores & tiebreaker (pool view)</h3>
-          <p class="mobile-daily-tiebreak-caption">
-            Same order as Live Standings. <strong>Green</strong> = lowest team score that day among Fri–Sun daily winners only
-            (Thursday never highlighted here). Total = Fri + Sat + Sun only.
-          </p>
-          <table>
-            <thead>
-              <tr>
-                <th>Participant</th>
-                <th>Thu</th>
-                <th>Fri</th>
-                <th>Sat</th>
-                <th>Sun</th>
-                <th>Total (Fri–Sun)</th>
-                <th>Tiebreak Pick</th>
-                <th>Tiebreak Diff</th>
-              </tr>
-            </thead>
-            <tbody id="mobile-daily-tiebreak-body-pool-only">
-              {% for row in state.get("leaderboard", []) %}
-              <tr>
-                <td>{{ row.name }}</td>
-                {% set pwd = row.get("poolOnlyDailyWinnerDays") or [] %}
-                <td>{{ to_par(row.dailyScores.get("1", row.dailyScores.get(1, 0))) }}</td>
-                <td class="{{ 'daily-winner-cell' if 2 in pwd else '' }}">{{ to_par(row.dailyScores.get("2", row.dailyScores.get(2, 0))) }}</td>
-                <td class="{{ 'daily-winner-cell' if 3 in pwd else '' }}">{{ to_par(row.dailyScores.get("3", row.dailyScores.get(3, 0))) }}</td>
-                <td class="{{ 'daily-winner-cell' if 4 in pwd else '' }}">{{ to_par(row.dailyScores.get("4", row.dailyScores.get(4, 0))) }}</td>
-                <td>
-                  <strong>{{ to_par(row.get("poolOnlyEventScore", row.eventScore)) }}</strong>
-                </td>
-                <td>{{ to_par(row.predictedWinningToPar) }}</td>
-                <td>{{ row.tiebreakDiff if row.tiebreakDiff is not none else "-" }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </section>
-        <section class="mobile-sidegame-standings pool-only-charts-section" aria-labelledby="pool-only-side-title">
-          <h3 id="pool-only-side-title">Side game standings (pool view)</h3>
-          <p class="mobile-daily-tiebreak-caption">Eagles, aces, and streaks: rounds 2–4 only. Daily column is always $0 here.</p>
-          <table>
-            <thead>
-              <tr>
-                <th>Participant</th>
-                <th>Eagles</th>
-                <th>Aces</th>
-                <th>Streaks</th>
-                <th>Daily</th>
-                <th>Side Net</th>
-              </tr>
-            </thead>
-            <tbody id="mobile-sidegames-body-pool-only">
-              {% for row in state.get("leaderboard", []) %}
-              <tr>
-                <td>{{ row.name }}</td>
-                <td>${{ row.get("eagleBonusDollarsPoolOnly", 0) }}</td>
-                <td>${{ row.get("aceBonusDollarsPoolOnly", 0) }}</td>
-                <td>${{ row.get("birdieStreakBonusDollarsPoolOnly", 0) }}</td>
-                <td>$0</td>
-                <td><strong>${{ '%.2f'|format(row.get("netPayoutDollarsPoolOnly", 0)) }}</strong></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </section>
+        <div id="payout-pool-only-charts" class="payout-pool-only-charts-inner" aria-live="polite"></div>
       </div>
     </main>
 
@@ -675,6 +610,7 @@
       let mastersFieldSignature = "";
       const POOL_BUY_IN = 25;
       const POOL_SIZE = {{ config.participants|length }};
+      const DAILY_WINNER_DAY_GROSS = {{ daily_winner_bonus_dollars }};
       let lastPayoutIntegrityOk = true;
       const phxFormatter = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Phoenix",
@@ -1006,6 +942,186 @@
         return transfers;
       }
 
+      function payoutNetPoolOnlyValue(row) {
+        const v = row.netPayoutDollarsPoolOnly;
+        if (v === null || v === undefined) return 0;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function computePayoutPositionsPoolOnly(rows) {
+        return (rows || []).map((row) => {
+          const main = payoutMainValue(row);
+          const net = payoutNetPoolOnlyValue(row);
+          const total = Math.round((main + net) * 100) / 100;
+          const position = Math.round((total - POOL_BUY_IN) * 100) / 100;
+          return {
+            name: row.name,
+            rank: row.rank,
+            main,
+            net,
+            eagle: Number(row.eagleBonusDollarsPoolOnly) || 0,
+            ace: Number(row.aceBonusDollarsPoolOnly) || 0,
+            streak: Number(row.birdieStreakBonusDollarsPoolOnly) || 0,
+            daily: 0,
+            total,
+            position,
+          };
+        });
+      }
+
+      function dailySidePerOtherPayer() {
+        const d = Math.max(1, POOL_SIZE - 1);
+        return Math.round((Number(DAILY_WINNER_DAY_GROSS) / d) * 100) / 100;
+      }
+
+      function renderPayoutPoolOnlyCharts(rows, focus) {
+        const mount = document.getElementById("payout-pool-only-charts");
+        if (!mount) return;
+        if (!rows || rows.length === 0) {
+          mount.innerHTML =
+            "<p class=\"payout-empty\">Standings are not loaded yet. Pool-only settlement lines appear after the first live update.</p>";
+          return;
+        }
+
+        let html = "";
+        if (!lastPayoutIntegrityOk) {
+          html +=
+            "<p class=\"payout-warning\"><strong>Payout integrity:</strong> figures are provisional until the integrity check passes (see status card).</p>";
+        }
+
+        const positions = computePayoutPositionsPoolOnly(rows);
+        const transfers = minimizeSettlementTransfers(positions);
+        const pot = POOL_SIZE * POOL_BUY_IN;
+        const mainPayee =
+          (rows || []).find((r) => payoutMainValue(r) > 0) ||
+          (rows || []).find((r) => Number(r.rank) === 1) ||
+          null;
+        const mainPayeeName = mainPayee ? mainPayee.name : "";
+
+        html += `<div class="payout-pool-summary payout-pool-summary--nested">
+          <p><strong>Pool worksheet (subset):</strong> same buy-in assumption as above — <strong>${formatMoneyPayout(
+            pot,
+          )}</strong> main pot (${POOL_SIZE} × ${formatMoneyPayout(POOL_BUY_IN)}). Side-game dollars in this block omit Thursday rounds for Eagles / Aces / Streaks and omit daily from the pooled <strong>net</strong> (daily is settled separately per day).</p>
+          <p><strong>Main event payee:</strong> still <strong>${escapeHtmlPayout(mainPayeeName || "—")}</strong> on overall #1 for the full main pot.</p></div>`;
+
+        const breakdownRows = positions
+          .map((p) => {
+            const en = escapeHtmlPayout(p.name);
+            return `<tr>
+              <td><strong>${en}</strong> <span class="payout-rank-muted">(#${p.rank})</span></td>
+              <td class="payout-num">${formatMoneyPayout(p.main)}</td>
+              <td class="payout-num">${formatMoneyPayout(p.eagle)}</td>
+              <td class="payout-num">${formatMoneyPayout(p.ace)}</td>
+              <td class="payout-num">${formatMoneyPayout(p.streak)}</td>
+              <td class="payout-num">${formatMoneyPayout(p.daily)}</td>
+              <td class="payout-num payout-num--emph">${formatMoneyPayout(p.total)}</td>
+            </tr>`;
+          })
+          .join("");
+
+        html += `<h3 class="payout-subhead payout-subhead--pool-only">1. Per-participant totals (pool worksheet)</h3>
+          <p class="payout-table-note">Columns: main event payout, raw Fri–Sun side bonuses (Eagles / Aces / Streaks), Daily shown as <strong>$0</strong> here (paid daily off-sheet), <strong>Total if pool paid out</strong> (main + side net for this subset). Use the <strong>Venmo directory</strong> below for payee handles.</p>
+          <div class="payout-table-scroll">
+          <table class="pick-table payout-breakdown-table">
+            <thead><tr>
+              <th>Participant</th>
+              <th>Main</th>
+              <th>Eagles</th>
+              <th>Aces</th>
+              <th>Streaks</th>
+              <th>Daily</th>
+              <th>Total out</th>
+            </tr></thead>
+            <tbody>${breakdownRows}</tbody>
+          </table></div>`;
+
+        let xferRows = transfers
+          .map((t) => {
+            return `<tr>
+              <td><strong>${escapeHtmlPayout(t.from)}</strong></td>
+              <td aria-hidden="true">→</td>
+              <td><strong>${escapeHtmlPayout(t.to)}</strong></td>
+              <td class="payout-num">${formatMoneyPayout(t.amount)}</td>
+            </tr>`;
+          })
+          .join("");
+
+        if (!xferRows) {
+          xferRows =
+            "<tr><td colspan=\"4\" class=\"payout-empty-row\">No payment chain needed — amounts net to $0 under these worksheet rules.</td></tr>";
+        }
+
+        if (focus) {
+          const xferFiltered = transfers.filter((t) => t.from === focus || t.to === focus);
+          xferRows = xferFiltered
+            .map((t) => {
+              const youPay = t.from === focus;
+              return `<tr>
+                <td>${youPay ? `<strong>You</strong> pay` : `<strong>${escapeHtmlPayout(t.from)}</strong> pays`}</td>
+                <td aria-hidden="true">→</td>
+                <td>${youPay ? escapeHtmlPayout(t.to) : "<strong>you</strong>"}</td>
+                <td class="payout-num">${formatMoneyPayout(t.amount)}</td>
+              </tr>`;
+            })
+            .join("");
+          if (!xferRows) {
+            xferRows =
+              "<tr><td colspan=\"4\" class=\"payout-empty-row\">No direct transfers list for you in this minimal settlement.</td></tr>";
+          }
+        }
+
+        html += `<h3 class="payout-subhead payout-subhead--pool-only">2. ${focus ? `Transfers involving ${escapeHtmlPayout(focus)}` : "Who pays whom (minimal transfers)"}</h3>
+          <p class="payout-table-note">Each amount <strong>includes main-event and this subset of side-game settlement</strong> (everyone still owes their <strong>${formatMoneyPayout(
+            POOL_BUY_IN,
+          )}</strong> buy-in into the pool). Daily pooled amounts are excluded here. Use the <strong>Venmo directory</strong> at the bottom for handles.</p>
+          <div class="payout-table-scroll">
+          <table class="pick-table payout-transfer-table">
+            <thead><tr>
+              <th>From</th>
+              <th></th>
+              <th>To</th>
+              <th>Amount</th>
+            </tr></thead>
+            <tbody>${xferRows}</tbody>
+          </table></div>`;
+
+        const perOther = dailySidePerOtherPayer();
+        const dayLabels = ["Thursday", "Friday", "Saturday", "Sunday"];
+        const dailyRows = [1, 2, 3, 4]
+          .map((d) => {
+            const w = (rows || []).find((r) => (r.dailyWinnerDays || []).map(Number).includes(d));
+            const wname = w ? escapeHtmlPayout(w.name) : "—";
+            const payLine = w
+              ? `Winner collects <strong>${formatMoneyPayout(DAILY_WINNER_DAY_GROSS)}</strong> total — each of the other <strong>${POOL_SIZE - 1}</strong> participants pays them <strong>${formatMoneyPayout(
+                  perOther,
+                )}</strong> (off-app that day).`
+              : "No winner recorded yet for that day.";
+            return `<tr>
+              <td>${dayLabels[d - 1]}</td>
+              <td>${wname}</td>
+              <td>${payLine}</td>
+            </tr>`;
+          })
+          .join("");
+
+        html += `<h3 class="payout-subhead payout-subhead--pool-only">3. Daily $${perOther} side bet — who to pay</h3>
+          <p class="payout-table-note">Informational: ${formatMoneyPayout(DAILY_WINNER_DAY_GROSS)} to the daily winner when awarded (${formatMoneyPayout(
+            perOther,
+          )} × ${POOL_SIZE - 1} others). Handle cash / Venmo off-sheet; not included in tables 1–2.</p>
+          <div class="payout-table-scroll">
+          <table class="pick-table payout-daily-side-table">
+            <thead><tr>
+              <th>Day</th>
+              <th>Winner</th>
+              <th>Settlement</th>
+            </tr></thead>
+            <tbody>${dailyRows}</tbody>
+          </table></div>`;
+
+        mount.innerHTML = html;
+      }
+
       function renderPayoutSettlement(rows) {
         const out = document.getElementById("payout-settlement-output");
         if (!out) return;
@@ -1013,6 +1129,7 @@
         if (!rows || rows.length === 0) {
           out.innerHTML =
             "<p class=\"payout-empty\">Standings are not loaded yet. Settlement lines appear after the first live update.</p>";
+          renderPayoutPoolOnlyCharts([], focus);
           return;
         }
         const positions = computePayoutPositions(rows);
@@ -1137,6 +1254,7 @@
         }
 
         out.innerHTML = html;
+        renderPayoutPoolOnlyCharts(rows, focus);
       }
 
       function renderStandings(rows) {
@@ -1184,11 +1302,10 @@
       }
 
       function renderMobileDailyTiebreakStandings(rows) {
-        fillMobileDailyTiebreakBody("mobile-daily-tiebreak-body", rows, false);
-        fillMobileDailyTiebreakBody("mobile-daily-tiebreak-body-pool-only", rows, true);
+        fillMobileDailyTiebreakBody("mobile-daily-tiebreak-body", rows);
       }
 
-      function fillMobileDailyTiebreakBody(bodyId, rows, poolOnly) {
+      function fillMobileDailyTiebreakBody(bodyId, rows) {
         const body = document.getElementById(bodyId);
         if (!body) return;
         body.innerHTML = "";
@@ -1198,21 +1315,16 @@
         }
         for (const row of rows) {
           const tr = document.createElement("tr");
-          const winDays = poolOnly ? row.poolOnlyDailyWinnerDays || [] : row.dailyWinnerDays || [];
+          const winDays = row.dailyWinnerDays || [];
           const dayWins = new Set(winDays.map((v) => Number(v)));
           const dayClass = (day) => (dayWins.has(day) ? "daily-winner-cell" : "");
-          const totalDisplay = poolOnly
-            ? (row.poolOnlyEventScore !== undefined && row.poolOnlyEventScore !== null
-                ? row.poolOnlyEventScore
-                : [2, 3, 4].reduce((s, d) => s + Number(getDailyScore(row.dailyScores || {}, d) || 0), 0))
-            : row.eventScore;
           tr.innerHTML = `
             <td>${row.name}</td>
-            <td class="${poolOnly ? "" : dayClass(1)}">${formatToPar(getDailyScore(row.dailyScores || {}, 1))}</td>
+            <td class="${dayClass(1)}">${formatToPar(getDailyScore(row.dailyScores || {}, 1))}</td>
             <td class="${dayClass(2)}">${formatToPar(getDailyScore(row.dailyScores || {}, 2))}</td>
             <td class="${dayClass(3)}">${formatToPar(getDailyScore(row.dailyScores || {}, 3))}</td>
             <td class="${dayClass(4)}">${formatToPar(getDailyScore(row.dailyScores || {}, 4))}</td>
-            <td><strong>${formatToPar(totalDisplay)}</strong></td>
+            <td><strong>${formatToPar(row.eventScore)}</strong></td>
             <td>${formatToPar(row.predictedWinningToPar)}</td>
             <td>${row.tiebreakDiff ?? "-"}</td>
           `;
@@ -1221,11 +1333,10 @@
       }
 
       function renderMobileSidegameStandings(rows) {
-        fillMobileSidegameBody("mobile-sidegames-body", rows, false);
-        fillMobileSidegameBody("mobile-sidegames-body-pool-only", rows, true);
+        fillMobileSidegameBody("mobile-sidegames-body", rows);
       }
 
-      function fillMobileSidegameBody(bodyId, rows, poolOnly) {
+      function fillMobileSidegameBody(bodyId, rows) {
         const body = document.getElementById(bodyId);
         if (!body) return;
         body.innerHTML = "";
@@ -1235,11 +1346,11 @@
         }
         for (const row of rows) {
           const tr = document.createElement("tr");
-          const e = poolOnly ? row.eagleBonusDollarsPoolOnly ?? 0 : row.eagleBonusDollars || 0;
-          const a = poolOnly ? row.aceBonusDollarsPoolOnly ?? 0 : row.aceBonusDollars || 0;
-          const s = poolOnly ? row.birdieStreakBonusDollarsPoolOnly ?? 0 : row.birdieStreakBonusDollars || 0;
-          const d = poolOnly ? 0 : row.dailyWinnerBonusDollars || 0;
-          const net = poolOnly ? row.netPayoutDollarsPoolOnly : row.netPayoutDollars;
+          const e = row.eagleBonusDollars || 0;
+          const a = row.aceBonusDollars || 0;
+          const s = row.birdieStreakBonusDollars || 0;
+          const d = row.dailyWinnerBonusDollars || 0;
+          const net = row.netPayoutDollars;
           tr.innerHTML = `
             <td>${row.name}</td>
             <td>$${e}</td>

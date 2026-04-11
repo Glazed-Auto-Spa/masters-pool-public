@@ -3219,19 +3219,21 @@ tbody tr:hover {
   max-width: none;
 }
 
-.skin-masters-v7 .pool-only-charts-wrap .mobile-daily-tiebreak-standings,
-.skin-masters-v7 .pool-only-charts-wrap .mobile-sidegame-standings {
-  display: block;
+.skin-masters-v7 .payout-pool-only-charts-inner .payout-pool-summary--nested {
+  margin-bottom: 16px;
 }
 
-.skin-masters-v7 .pool-only-charts-section h3 {
-  margin: 0 0 6px;
-  font-size: 0.95rem;
-  color: #1d3b4a;
+.skin-masters-v7 .payout-pool-only-charts-inner .payout-subhead--pool-only {
+  margin-top: 22px;
+  margin-bottom: 8px;
 }
 
-.skin-masters-v7 .pool-only-charts-section + .pool-only-charts-section {
-  margin-top: 20px;
+.skin-masters-v7 .payout-pool-only-charts-inner .payout-subhead--pool-only:first-of-type {
+  margin-top: 0;
+}
+
+.skin-masters-v7 .payout-pool-only-charts-inner .payout-table-scroll + .payout-subhead--pool-only {
+  margin-top: 26px;
 }
 
 .skin-masters-v7 .mobile-daily-tiebreak-caption {
