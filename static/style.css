@@ -2841,12 +2841,6 @@ body.skin-masters-v7 {
   box-shadow: var(--v7-shadow-1);
 }
 
-.skin-masters-v7 .standings-table-scroll {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
 .skin-masters-v7 .standings-header {
   display: flex;
   justify-content: space-between;
@@ -3792,19 +3786,9 @@ body.skin-masters-v7 {
     align-items: flex-start;
   }
 
-  .skin-masters-v7 .standings-table-scroll {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin: 0 0 10px;
-  }
-
-  .skin-masters-v7 .standings-table-scroll #standings {
-    min-width: 46rem;
-  }
-
   .skin-masters-v7 #standings {
     width: 100%;
-    table-layout: auto;
+    table-layout: fixed;
     font-size: 0.8rem;
   }
 
@@ -3927,19 +3911,28 @@ body.skin-masters-v7 {
     color: #5a7382;
   }
 
-  /* Mobile: keep Thu–Sun, Total, tiebreaker cols + daily-winner highlighting; hide dollar columns (shown under Side Game Standings). */
-  .skin-masters-v7 #standings th:nth-child(10),
+  .skin-masters-v7 #standings th:nth-child(5),
+  .skin-masters-v7 #standings th:nth-child(6),
+  .skin-masters-v7 #standings th:nth-child(7),
+  .skin-masters-v7 #standings th:nth-child(8),
   .skin-masters-v7 #standings th:nth-child(11),
   .skin-masters-v7 #standings th:nth-child(12),
   .skin-masters-v7 #standings th:nth-child(13),
   .skin-masters-v7 #standings th:nth-child(14),
   .skin-masters-v7 #standings th:nth-child(15),
-  .skin-masters-v7 #standings td:nth-child(10),
+  .skin-masters-v7 #standings th:nth-child(16),
+  .skin-masters-v7 #standings th:nth-child(17),
+  .skin-masters-v7 #standings td:nth-child(5),
+  .skin-masters-v7 #standings td:nth-child(6),
+  .skin-masters-v7 #standings td:nth-child(7),
+  .skin-masters-v7 #standings td:nth-child(8),
   .skin-masters-v7 #standings td:nth-child(11),
   .skin-masters-v7 #standings td:nth-child(12),
   .skin-masters-v7 #standings td:nth-child(13),
   .skin-masters-v7 #standings td:nth-child(14),
-  .skin-masters-v7 #standings td:nth-child(15) {
+  .skin-masters-v7 #standings td:nth-child(15),
+  .skin-masters-v7 #standings td:nth-child(16),
+  .skin-masters-v7 #standings td:nth-child(17) {
     display: none;
   }
 

@@ -27,7 +27,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Masters Pool | A Tradition Unlike Any Other Spreadsheet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412f') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20260412e') }}" />
   </head>
   <body class="skin-masters-v7">
     <header class="masthead">
@@ -214,7 +214,6 @@
             <button id="share-standings" type="button">Share</button>
           </div>
         </div>
-        <div class="standings-table-scroll">
         <table id="standings">
           <thead>
             <tr>
@@ -278,7 +277,6 @@
             {% endfor %}
           </tbody>
         </table>
-        </div>
         <p class="standings-footnote" id="standings-weekend-footnote">
           <span class="standings-col-asterisk" aria-hidden="true">*</span>
           <strong>Saturday and Sunday.</strong>
@@ -927,7 +925,7 @@
           <p><strong>Buy-ins not collected:</strong> treat the full <strong>${formatMoneyPayout(
             pot,
           )}</strong> main pot (${POOL_SIZE} × ${formatMoneyPayout(POOL_BUY_IN)}) as <strong>still to be gathered and paid out</strong> — not sitting in anyone&rsquo;s account from this pool.</p>
-          <p><strong>Side games:</strong> Eagles, Aces, Streaks, and Daily winners are pooled and settled to a <strong>zero-sum net</strong> per participant (see Side Game Standings below).</p></div>`;
+          <p><strong>Side games:</strong> Eagles, Aces, Streaks, and Daily winners are pooled and settled to a <strong>zero-sum net</strong> per participant (see Side Bet Net column).</p></div>`;
         html += `<p class="payout-main-payee"><strong>Main event payee on these standings:</strong> route the <strong>${formatMoneyPayout(
           pot,
         )}</strong> winner-take-all pot to <strong>${escapeHtmlPayout(mainPayeeName || "—")}</strong> (Live Standings #1). Each other participant&rsquo;s <strong>${formatMoneyPayout(
@@ -944,13 +942,14 @@
               <td class="payout-num">${formatMoneyPayout(p.ace)}</td>
               <td class="payout-num">${formatMoneyPayout(p.streak)}</td>
               <td class="payout-num">${formatMoneyPayout(p.daily)}</td>
+              <td class="payout-num">${formatMoneyPayout(p.net)}</td>
               <td class="payout-num payout-num--emph">${formatMoneyPayout(p.total)}</td>
             </tr>`;
           })
           .join("");
 
         html += `<h3 class="payout-subhead">Per-participant totals</h3>
-          <p class="payout-table-note">Columns: main event payout (full pot to 1st on these standings), raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Total if pool paid out</strong> (main + side net after the zero-sum split). No buy-ins collected yet. Use the <strong>Venmo directory</strong> below for payee phones.</p>
+          <p class="payout-table-note">Columns: main event payout (full pot to 1st on these standings), raw side bonuses (Eagles / Aces / Streaks / Daily), <strong>Side Bet Net</strong> (after zero-sum split), <strong>Total if pool paid out</strong> (main + side net). No buy-ins collected yet. Use the <strong>Venmo directory</strong> below for payee phones.</p>
           <div class="payout-table-scroll">
           <table class="pick-table payout-breakdown-table">
             <thead><tr>
@@ -960,6 +959,7 @@
               <th>Aces</th>
               <th>Streaks</th>
               <th>Daily</th>
+              <th>Side net</th>
               <th>Total out</th>
             </tr></thead>
             <tbody>${breakdownRows}</tbody>
